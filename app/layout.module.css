@@ -1,0 +1,9 @@
+.layout {
+    display: grid;
+    grid-auto-flow: row;
+    grid-template-rows: auto max-content auto;
+}
+
+.body {
+    height: calc(100vh - 80px);
+}

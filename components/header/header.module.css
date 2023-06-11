@@ -1,0 +1,18 @@
+.header {
+    height: 50px;
+    background-color: white;
+    display: grid;
+    grid-template:
+        'logo blank user'
+        /auto 1fr auto;
+}
+
+.logo {
+    grid-area: logo;
+    width: 50px;
+}
+
+.user {
+    grid-area: user;
+    width: 100px;
+}

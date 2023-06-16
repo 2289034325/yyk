@@ -59,9 +59,22 @@ export function addBook(userId, title, start, end) {
     return b;
 }
 
+//生徒予約変更
+export function editBook(id, title, start, end) {    
+
+    const b = db.booked.find(r=>r.id == id);
+    b.title = title;
+    b.start = start;
+    b.end = end;
+
+    return b;
+}
+
 //生徒予約削除
-export function deleteBook(id) {
+export function deleteBook(id) {    
+    console.log('delete',id,'delete')
     db.booked = db.booked.filter(b => b.id != id);
+    console.log('delete',db.booked,'delete')
 }
 
 

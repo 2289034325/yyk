@@ -35,42 +35,62 @@ const Home = () => {
     return data;
   }
 
+  //予約変更
+  const editBook = async (params) => {
+    const token = session.user.token;
+    const response = await fetch(`/api/book`, {
+      method: "PUT",
+      headers: {
+        'Authorization': 'Bearer ' + token,
+      },
+      body: JSON.stringify(params)
+    });
+    const data = await response.json();
+
+    return data;
+  }
+
+  //予約削除
+  //nextjs bug
+  //next api always ignore request body.
+  //passing id from url params to solve the problem.
+  //or using dynamic path api
+  const deleteApi = async (params) => {
+    const token = session.user.token;
+    await fetch(`/api/book?id=${params.id}`, {
+      method: "DELETE",
+      headers: {
+        'Authorization': 'Bearer ' + token,
+      },
+      body: JSON.stringify(params)
+    });
+  }
+
   // データ操作
   const { data: bookData } = useQuery(["bookdata"], fetchBooks);
-  const bookMutation = useMutation(addBook);
+  const addMutation = useMutation(addBook);
+  const editMutation = useMutation(editBook);
+  const deleteMutation = useMutation(deleteApi);
 
   const books = useMemo(() => {
+    console.log(bookData)
     if (!Array.isArray(bookData))
       return [];
 
     const bs = bookData.map(d => { return { event_id: d.id, title: d.title, start: new Date(d.start), end: new Date(d.end) } })
-
-    console.log(bs);
-
     calendarRef.current.scheduler.handleState(bs, "events");
-
 
     return bs;
   }, [bookData]);
 
-  useEffect(() => {
-
-  }, [])
-
-  useEffect(() => {
-
-  })
-
-  useLayoutEffect(() => {
-
-  });
-
+  //予約追加確認ボタン処理
   const confirmBook = async (event, action) => {
-    const { title, start, end } = event;
-    console.log(event)
+    const { event_id: id, title, start, end } = event;
+    console.log(event, action)
     if (action === 'create') {
-      await bookMutation.mutateAsync({ title, start, end }, {
+      await addMutation.mutateAsync({ title, start, end }, {
         onSuccess: (data) => {
+          //この書き方はuseQueryを動かして、RerenderもFired
           queryClient.setQueryData(['bookdata'], (oldData) => ([...oldData, data]))
         }
       })
@@ -78,34 +98,34 @@ const Home = () => {
       return {}
     }
     else {
+      var success = false;
+      await editMutation.mutateAsync({ id, title, start, end }, {
+        onSuccess: (data) => {
+          //この書き方はuseQueryを動かせない、自動的にRerenderさせない
+          queryClient.setQueryData(['bookdata', { id: data.id }], data);
+          success = true;
+        }
+      })
 
+      return success ? event : {}
     }
   }
 
-  // const confirmBook = useCallback(async (event, action) => {
-  //   const { title, start, end } = event;
-  //   console.log(bookData, '----------------------')
-  //   console.log(books, '----------------------')
-  //   if (action === 'create') {
-  //     await bookMutation.mutateAsync({ title, start, end }, {
-  //       onSuccess: (data) => {
-  //         console.log(bookData, '----------------------')
-  //         // queryClient.setQueryData(['bookdata'], [...bookData, data])
-  //       }
-  //     })
-
-  //     return {}
-  //   }
-  //   else {
-
-  //   }
-  // }, [bookData])
+  //予約削除
+  const deleteBook = async (eventId) => {
+    await deleteMutation.mutateAsync({ id: eventId }, {
+      onSuccess: () => {
+        queryClient.setQueryData(['bookdata'], (oldData) => oldData.filter(r => r.id != eventId));
+      }
+    })
+  }
 
   return (
     <section className='w-full'>
       <Scheduler
         ref={calendarRef}
         onConfirm={confirmBook}
+        onDelete={deleteBook}
         view="week"
         events={books}
       />

@@ -1,0 +1,2 @@
+export const BOOKS = "BOOKS"
+export const DEFAULT_BOOKABLE = "DEFAULT_BOOKABLE"

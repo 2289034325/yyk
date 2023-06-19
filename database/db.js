@@ -3,9 +3,8 @@ import { v4 as uuid } from 'uuid';
 const db = {
     users: [{ id: '1', email: 'ngjc250@gmail.com', password: '123456', name: 'tom', role: 'admin', disabled: false }, { id: '2', email: 'ngjc250@hotmail.com', password: '123456', name: 'jim', role: 'user', disabled: false }],
     booked: [],
-    defaultBookable: { days: [1, 2, 3, 4, 5], times: [{ start: '9:00', end: '12:00' }, { start: '13:00', end: '18:00' }] },
-    specialBookable: [],
-    specialUnBookable: []
+    defaultBookable: [{ day: 1, spans: [{ start: new Date('2010-01-01 09:00:00'), end: new Date('2010-01-01 12:00:00') }, { start: new Date('2010-01-01 13:00:00'), end: new Date('2010-01-01 18:00:00') }] }],
+    specialBookable: [{ date: '', start: '', end: '', disable: false }]
 }
 
 //ログインチェック
@@ -28,9 +27,8 @@ export function banUser(email) {
 }
 
 //予約可能時間設定（曜日、時間）
-export function setDefaultBookable(days, times) {
-    db.defaultBookable.days = days;
-    db.defaultBookable.times = times;
+export function setDefaultBookable(settings) {
+    db.defaultBookable = settings;
 }
 
 //普通時間以外の予約可能枠を追加
@@ -60,9 +58,9 @@ export function addBook(userId, title, start, end) {
 }
 
 //生徒予約変更
-export function editBook(id, title, start, end) {    
+export function editBook(id, title, start, end) {
 
-    const b = db.booked.find(r=>r.id == id);
+    const b = db.booked.find(r => r.id == id);
     b.title = title;
     b.start = start;
     b.end = end;
@@ -71,10 +69,10 @@ export function editBook(id, title, start, end) {
 }
 
 //生徒予約削除
-export function deleteBook(id) {    
-    console.log('delete',id,'delete')
+export function deleteBook(id) {
+    console.log('delete', id, 'delete')
     db.booked = db.booked.filter(b => b.id != id);
-    console.log('delete',db.booked,'delete')
+    console.log('delete', db.booked, 'delete')
 }
 
 

@@ -4,19 +4,17 @@ import { useEffect, useMemo, useLayoutEffect, useCallback, useRef } from 'react'
 import { QueryClient, QueryClientProvider, useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Scheduler } from '@aldabil/react-scheduler';
 import { signIn, signOut, useSession, getProviders } from "next-auth/react";
+import { BOOKS } from '@services/cache';
+import { addBook, deleteBook, editBook, getBooks } from '@services/api';
 
 const Home = () => {
   const { data: session } = useSession();
 
-  const queryClient = useQueryClient()
-
-  const calendarRef = useRef(null);
 
   //予約すみデータを取得する
-  const fetchBooks = async () => {
+  const getBooks = async () => {
     const response = await fetch(`/api/book`, { method: "GET" });
     const data = await response.json();
-    console.log(data)
     return data;
   }
 
@@ -55,7 +53,7 @@ const Home = () => {
   //next api always ignore request body.
   //passing id from url params to solve the problem.
   //or using dynamic path api
-  const deleteApi = async (params) => {
+  const deleteBook = async (params) => {
     const token = session.user.token;
     await fetch(`/api/book?id=${params.id}`, {
       method: "DELETE",
@@ -66,14 +64,18 @@ const Home = () => {
     });
   }
 
+
+  const queryClient = useQueryClient()
+  const calendarRef = useRef(null);
+
   // データ操作
-  const { data: bookData } = useQuery(["bookdata"], fetchBooks);
+  const { data: bookData } = useQuery([BOOKS], getBooks);
   const addMutation = useMutation(addBook);
   const editMutation = useMutation(editBook);
-  const deleteMutation = useMutation(deleteApi);
+  const deleteMutation = useMutation(deleteBook);
 
+  // データのフォーマット
   const books = useMemo(() => {
-    console.log(bookData)
     if (!Array.isArray(bookData))
       return [];
 
@@ -83,26 +85,28 @@ const Home = () => {
     return bs;
   }, [bookData]);
 
-  //予約追加確認ボタン処理
-  const confirmBook = async (event, action) => {
+  //予約確認ボタン処理
+  const onConfirm = async (event, action) => {
     const { event_id: id, title, start, end } = event;
-    console.log(event, action)
+
+    //予約追加
     if (action === 'create') {
       await addMutation.mutateAsync({ title, start, end }, {
         onSuccess: (data) => {
           //この書き方はuseQueryを動かして、RerenderもFired
-          queryClient.setQueryData(['bookdata'], (oldData) => ([...oldData, data]))
+          queryClient.setQueryData([BOOKS], (oldData) => ([...oldData, data]))
         }
       })
 
       return {}
     }
+    //予約編集
     else {
       var success = false;
       await editMutation.mutateAsync({ id, title, start, end }, {
         onSuccess: (data) => {
           //この書き方はuseQueryを動かせない、自動的にRerenderさせない
-          queryClient.setQueryData(['bookdata', { id: data.id }], data);
+          queryClient.setQueryData([BOOKS, { id: data.id }], data);
           success = true;
         }
       })
@@ -112,10 +116,10 @@ const Home = () => {
   }
 
   //予約削除
-  const deleteBook = async (eventId) => {
+  const onDelete = async (eventId) => {
     await deleteMutation.mutateAsync({ id: eventId }, {
       onSuccess: () => {
-        queryClient.setQueryData(['bookdata'], (oldData) => oldData.filter(r => r.id != eventId));
+        queryClient.setQueryData([BOOKS], (oldData) => oldData.filter(r => r.id != eventId));
       }
     })
   }
@@ -124,8 +128,8 @@ const Home = () => {
     <section className='w-full'>
       <Scheduler
         ref={calendarRef}
-        onConfirm={confirmBook}
-        onDelete={deleteBook}
+        onConfirm={onConfirm}
+        onDelete={onDelete}
         view="week"
         events={books}
       />

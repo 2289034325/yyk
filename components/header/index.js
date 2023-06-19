@@ -22,7 +22,7 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
-import BookSetting from "@components/setting";
+import BookSetting from "@components/bookSetting";
 
 const SiteHeader = () => {
     const { data: session } = useSession()
@@ -146,18 +146,8 @@ const SiteHeader = () => {
                 )}
             </div>
 
-            <Dialog
-                open={isSetDlgOpen}
-                onClose={() => { setIsSetDlgOpen(false) }}>
-                <DialogTitle>時間設定</DialogTitle>
-                <DialogContent>
-                    <BookSetting />
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setIsSetDlgOpen(false)}>Cancel</Button>
-                    <Button onClick={confirmSetting}>Confirm</Button>
-                </DialogActions>
-            </Dialog>
+            {isSetDlgOpen && <BookSetting isOpen={isSetDlgOpen} handleClose={() => setIsSetDlgOpen(false)} />}
+
         </nav>
     );
 };

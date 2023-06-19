@@ -5,22 +5,42 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
+import { TimeField } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import { useState } from 'react';
+import dayjs from 'dayjs';
+import { Clear } from '@mui/icons-material';
 
-const TimeSpanSetting = () => {
+const TimeSpanSetting = ({ day, spans, spansChanged }) => {
 
-    const [spans, setSpans] = useState([])
+    // const [spans, setSpans] = useState(initSpans)
     const [isDlgOpen, setIsDlgOpen] = useState(false)
 
-    const addSpan = () => {
-        setIsDlgOpen(true)
+    console.log(day, spans, '((((((((((((((((((((((((')
+
+    const [start, setStart] = useState(dayjs())
+    const [end, setEnd] = useState(dayjs())
+
+    //予約可能時間を削除
+    const deleteSpan = (span) => {
+        var sps = spans.filter(s => s !== span)
+
+        spansChanged(day, sps)
     }
 
+    //予約可能時間を追加
     const confirm = () => {
+        
+        var sps = [...spans, { start, end }]
 
+        setStart(end)
+        setEnd(end.add(4, 'hour'))
+
+        spansChanged(day, sps)
+
+        setIsDlgOpen(false)
     }
 
     return (
@@ -28,26 +48,39 @@ const TimeSpanSetting = () => {
             <Chip
                 label="+"
                 size="small"
-                onClick={addSpan} />
-            <div>
-                {spans.map(s => {
-                    <span>{`${s.start}~${s.end}`}</span>
-                })}
-            </div>
+                onClick={() => setIsDlgOpen(true)} />
+            <Box marginLeft="10px">
+                {spans.map(s => (
+                    <Chip
+                        deleteIcon={<Clear />}
+                        label={`${s.start.format('HH:mm')}~${s.end.format('HH:mm')}`}
+                        onDelete={() => deleteSpan(s)} />
+                ))}
+            </Box>
 
             <Dialog open={isDlgOpen} onClose={() => { setIsDlgOpen(false) }}>
                 <DialogTitle>時間設定</DialogTitle>
                 <DialogContent>
-                    <DialogContentText>
-                        開始時間と終了時間を設定してください
-                    </DialogContentText>
                     <LocalizationProvider dateAdapter={AdapterDayjs}>
-                        <TimePicker /><TimePicker />
+                        <Box paddingTop="20px">
+                            <TimeField
+                                label="開始時間"
+                                ampm={false}
+                                value={start}
+                                onChange={(newValue) => setStart(newValue)}
+                            />
+                            <TimeField
+                                label="終了時間"
+                                ampm={false}
+                                value={end}
+                                onChange={(newValue) => setEnd(newValue)}
+                            />
+                        </Box>
                     </LocalizationProvider>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setIsDlgOpen(false)}>Cancel</Button>
-                    <Button onClick={confirm}>Confirm</Button>
+                    <Button onClick={() => setIsDlgOpen(false)}>キャンセル</Button>
+                    <Button onClick={confirm}>確認</Button>
                 </DialogActions>
             </Dialog>
         </Box>

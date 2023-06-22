@@ -14,7 +14,7 @@ const RootLayout = ({ children }) => {
       <body>
         <SessionProvider>
           <QueryProvider>
-            <main className='app'>
+            <main className='app flex h-screen flex-col'>
               <SiteHeader />
               {children}
             </main>

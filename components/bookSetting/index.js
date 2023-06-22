@@ -20,7 +20,7 @@ const BookSetting = ({ isOpen, handleClose }) => {
     const getDefaultBookable = async () => {
         const response = await fetch(`/api/setting/default`, { method: "GET" });
         const data = await response.json();
-        const nd = data.map(d => ({ day: d.day, spans: d.spans.map(s => ({ start: dayjs(s.start), end: dayjs(s.end) })) }))
+        const nd = data.map(d => ({ day: d.day, spans: d.spans.map(s => ({ start: dayjs(`${s.startH}:${s.startM}`, "HH:mm"), end: dayjs(`${s.endH}:${s.endM}`, "HH:mm") })) }))
         setNewSettings(nd)
 
         return data;
@@ -28,13 +28,19 @@ const BookSetting = ({ isOpen, handleClose }) => {
 
     //曜日別予約可能時間設定を編集
     const setDefaultBookable = async (params) => {
+        const nds = params.map(p => ({
+            day: p.day,
+            spans: p.spans.map(s => (
+                { startH: s.start.$H, startM: s.start.$m, endH: s.end.$H, endM: s.end.$m }))
+        }))
+
         const token = session.user.token;
         await fetch(`/api/setting/default`, {
             method: "PUT",
             headers: {
                 'Authorization': 'Bearer ' + token,
             },
-            body: JSON.stringify(params)
+            body: JSON.stringify(nds)
         });
     }
 

@@ -3,7 +3,7 @@ import { v4 as uuid } from 'uuid';
 const db = {
     users: [{ id: '1', email: 'ngjc250@gmail.com', password: '123456', name: 'tom', role: 'admin', disabled: false }, { id: '2', email: 'ngjc250@hotmail.com', password: '123456', name: 'jim', role: 'user', disabled: false }],
     booked: [],
-    defaultBookable: [{ day: 1, spans: [{ start: new Date('2010-01-01 09:00:00'), end: new Date('2010-01-01 12:00:00') }, { start: new Date('2010-01-01 13:00:00'), end: new Date('2010-01-01 18:00:00') }] }],
+    defaultBookable: [{ day: 1, spans: [{ startH: 11, startM: 0, endH: 12, endM: 0 }, { startH: 13, startM: 30, endH: 14, endM: 30 }] }],
     specialBookable: [{ date: '', start: '', end: '', disable: false }]
 }
 

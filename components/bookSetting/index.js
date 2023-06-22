@@ -20,13 +20,7 @@ const BookSetting = ({ isOpen, handleClose }) => {
     const getDefaultBookable = async () => {
         const response = await fetch(`/api/setting/default`, { method: "GET" });
         const data = await response.json();
-
-        console.log(data)
-
         const nd = data.map(d => ({ day: d.day, spans: d.spans.map(s => ({ start: dayjs(s.start), end: dayjs(s.end) })) }))
-
-        console.log(nd)
-
         setNewSettings(nd)
 
         return data;
@@ -35,14 +29,13 @@ const BookSetting = ({ isOpen, handleClose }) => {
     //曜日別予約可能時間設定を編集
     const setDefaultBookable = async (params) => {
         const token = session.user.token;
-        const response = await fetch(`/api/book`, {
+        await fetch(`/api/setting/default`, {
             method: "PUT",
             headers: {
                 'Authorization': 'Bearer ' + token,
             },
             body: JSON.stringify(params)
         });
-        await response.json();
     }
 
     const queryClient = useQueryClient()
@@ -60,7 +53,6 @@ const BookSetting = ({ isOpen, handleClose }) => {
         notifyOnNetworkStatusChange: true,
         fetchPolicy: 'network-only',
         onCompleted: (data) => {
-            console.log(data, '************************************')
             setNewSettings(data)
         },
     });
@@ -72,10 +64,7 @@ const BookSetting = ({ isOpen, handleClose }) => {
         if (!newSettings)
             return []
 
-
         const ss = newSettings.find(s => s.day == day)?.spans ?? [];
-
-        console.log(newSettings, day, ss)
 
         return ss;
     }
@@ -87,13 +76,16 @@ const BookSetting = ({ isOpen, handleClose }) => {
     }
 
     const confirmSetting = async () => {
+        console.log('confirm.......')
         const newSetting = [];
-        await setMutation.mutateAsync({ id, title, start, end }, {
+        await setMutation.mutateAsync(newSettings, {
             onSuccess: () => {
                 //この書き方はuseQueryを動かせない、自動的にRerenderさせない
                 queryClient.setQueryData([DEFAULT_BOOKABLE], (oldData) => (newSetting));
             }
         })
+
+        handleClose();
     }
 
     return (

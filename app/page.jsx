@@ -6,6 +6,7 @@ import { Scheduler } from '@aldabil/react-scheduler';
 import { signIn, signOut, useSession, getProviders } from "next-auth/react";
 import { BOOKS } from '@services/cache';
 import { addBook, deleteBook, editBook, getBooks } from '@services/api';
+import { v4 as uuid } from 'uuid';
 
 const Home = () => {
   const { data: session } = useSession();
@@ -13,39 +14,38 @@ const Home = () => {
 
   //予約すみデータを取得する
   const getBooks = async () => {
-    const response = await fetch(`/api/book`, { method: "GET" });
+    const response = await fetch(`http://localhost:3000/api/book`, { method: "GET" });
     const data = await response.json();
-    return data;
+
+    const bookData = data.map(d => { return { event_id: d.id, title: d.title, start: new Date(d.start), end: new Date(d.end) } })
+
+    console.log('books', bookData)
+
+    return bookData;
   }
 
   //予約追加
   const addBook = async (params) => {
     const token = session.user.token;
-    const response = await fetch(`/api/book`, {
+    await fetch(`http://localhost:3000/api/book`, {
       method: "POST",
       headers: {
         'Authorization': 'Bearer ' + token,
       },
       body: JSON.stringify(params)
     });
-    const data = await response.json();
-
-    return data;
   }
 
   //予約変更
   const editBook = async (params) => {
     const token = session.user.token;
-    const response = await fetch(`/api/book`, {
+    await fetch(`http://localhost:3000/api/book`, {
       method: "PUT",
       headers: {
         'Authorization': 'Bearer ' + token,
       },
       body: JSON.stringify(params)
     });
-    const data = await response.json();
-
-    return data;
   }
 
   //予約削除
@@ -55,7 +55,7 @@ const Home = () => {
   //or using dynamic path api
   const deleteBook = async (params) => {
     const token = session.user.token;
-    await fetch(`/api/book?id=${params.id}`, {
+    await fetch(`http://localhost:3000/api/book?id=${params.id}`, {
       method: "DELETE",
       headers: {
         'Authorization': 'Bearer ' + token,
@@ -69,44 +69,45 @@ const Home = () => {
   const calendarRef = useRef(null);
 
   // データ操作
-  const { data: bookData } = useQuery([BOOKS], getBooks);
+  const { refetch: refechBooks } = useQuery([BOOKS], getBooks, {
+    refetchOnWindowFocus: false,
+    enabled: false // disable this query from automatically running
+  });
   const addMutation = useMutation(addBook);
   const editMutation = useMutation(editBook);
   const deleteMutation = useMutation(deleteBook);
 
-  // データのフォーマット
-  const books = useMemo(() => {
-    if (!Array.isArray(bookData))
-      return [];
-
-    const bs = bookData.map(d => { return { event_id: d.id, title: d.title, start: new Date(d.start), end: new Date(d.end) } })
-    calendarRef.current.scheduler.handleState(bs, "events");
-
-    return bs;
-  }, [bookData]);
+  refechBooks().then(res => console.log('res', res))
 
   //予約確認ボタン処理
   const onConfirm = async (event, action) => {
+    if (!event.event_id)
+      event.event_id = uuid()
     const { event_id: id, title, start, end } = event;
 
     //予約追加
     if (action === 'create') {
-      await addMutation.mutateAsync({ title, start, end }, {
-        onSuccess: (data) => {
+      let success = false;
+      await addMutation.mutateAsync({ id, title, start, end }, {
+        onSuccess: () => {
           //この書き方はuseQueryを動かして、RerenderもFired
-          queryClient.setQueryData([BOOKS], (oldData) => ([...oldData, data]))
+          // queryClient.setQueryData([BOOKS], (oldData) => ([...oldData, data]))
+          success = true
+          console.log('success')
         }
       })
 
-      return {}
+      console.log('success', success, event)
+
+      return success ? event : {}
     }
     //予約編集
     else {
       var success = false;
       await editMutation.mutateAsync({ id, title, start, end }, {
-        onSuccess: (data) => {
+        onSuccess: () => {
           //この書き方はuseQueryを動かせない、自動的にRerenderさせない
-          queryClient.setQueryData([BOOKS, { id: data.id }], data);
+          // queryClient.setQueryData([BOOKS, { id: data.id }], data);
           success = true;
         }
       })
@@ -127,11 +128,10 @@ const Home = () => {
   return (
     <section className='w-full'>
       <Scheduler
-        ref={calendarRef}
         onConfirm={onConfirm}
         onDelete={onDelete}
         view="week"
-        events={books}
+        getRemoteEvents={() => refechBooks().then(res => res.data)}
       />
     </section>);
 };

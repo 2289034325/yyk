@@ -6,7 +6,7 @@ export const GET = async (request) => {
     try {
         const books = getBooked(Date.now(), Date.now())
 
-        console.log(books);
+        console.log('books', books)
 
         return new Response(JSON.stringify(books), { status: 200 })
     } catch (error) {
@@ -16,19 +16,15 @@ export const GET = async (request) => {
 
 export const POST = async (request) => {
     try {
-        console.log('POST', JSON.stringify(request), 'POST')
-
         const secret = process.env.NEXTAUTH_SECRET;
         const ut = await getToken({ req: request });
         const token = ut.token;
         const user = jwt.verify(token, secret);
 
-        const { title, start, end } = await request.json()
-        const b = addBook(user.id, title, start, end)
+        const { id, title, start, end } = await request.json()
+        addBook(user.id, id, title, start, end)
 
-        console.log('post', b, 'post')
-
-        return new Response(JSON.stringify(b), { status: 200 })
+        return new Response()
     } catch (error) {
         console.log(error)
         return new Response("システムエラー", { status: 500 })
@@ -43,11 +39,9 @@ export const PUT = async (request) => {
         const user = jwt.verify(token, secret);
 
         const { id, title, start, end } = await request.json()
-        const b = editBook(id, title, start, end)
+        editBook(id, title, start, end)
 
-        console.log('put', b, 'put')
-
-        return new Response(JSON.stringify(b), { status: 200 })
+        return new Response()
     } catch (error) {
         console.log('put', error, 'put')
         return new Response("システムエラー", { status: 500 })

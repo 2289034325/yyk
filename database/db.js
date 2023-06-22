@@ -50,29 +50,22 @@ export function getBooked(start, end) {
 }
 
 //生徒予約追加
-export function addBook(userId, title, start, end) {
-    const b = { id: uuid(), userId, title, start, end };
+export function addBook(userId, id, title, start, end) {
+    const b = { id, userId, title, start, end };
     db.booked.push(b)
-
-    return b;
 }
 
 //生徒予約変更
 export function editBook(id, title, start, end) {
-
     const b = db.booked.find(r => r.id == id);
     b.title = title;
     b.start = start;
     b.end = end;
-
-    return b;
 }
 
 //生徒予約削除
 export function deleteBook(id) {
-    console.log('delete', id, 'delete')
     db.booked = db.booked.filter(b => b.id != id);
-    console.log('delete', db.booked, 'delete')
 }
 
 

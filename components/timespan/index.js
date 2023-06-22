@@ -16,10 +16,7 @@ import { Clear } from '@mui/icons-material';
 const TimeSpanSetting = ({ day, spans, spansChanged }) => {
 
     // const [spans, setSpans] = useState(initSpans)
-    const [isDlgOpen, setIsDlgOpen] = useState(false)
-
-    console.log(day, spans, '((((((((((((((((((((((((')
-
+    const [isDlgOpen, setIsDlgOpen] = useState(false)    
     const [start, setStart] = useState(dayjs())
     const [end, setEnd] = useState(dayjs())
 
@@ -32,7 +29,7 @@ const TimeSpanSetting = ({ day, spans, spansChanged }) => {
 
     //予約可能時間を追加
     const confirm = () => {
-        
+
         var sps = [...spans, { start, end }]
 
         setStart(end)
@@ -50,8 +47,9 @@ const TimeSpanSetting = ({ day, spans, spansChanged }) => {
                 size="small"
                 onClick={() => setIsDlgOpen(true)} />
             <Box marginLeft="10px">
-                {spans.map(s => (
+                {spans.map((s, index) => (
                     <Chip
+                        key={index}
                         deleteIcon={<Clear />}
                         label={`${s.start.format('HH:mm')}~${s.end.format('HH:mm')}`}
                         onDelete={() => deleteSpan(s)} />

@@ -11,14 +11,19 @@ import {
 import { BOOKS, DEFAULT_BOOKABLE } from '@services/cache';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSession } from "next-auth/react";
-import { useMemo, useRef } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { v4 as uuid } from 'uuid';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import dayjs from 'dayjs';
+import Appointment from '@components/appointment';
 
 const Home = () => {
   const { data: session } = useSession();
+
+  const [showAptDlg, setShowAptDlg] = useState(false)
+  const [aptOption, setAptOption] = useState('')
+  const [editingApt, setEditingApt] = useState({})
 
   //曜日別予約可能時間設定を取得
   const getDefaultBookable = async () => {
@@ -185,23 +190,30 @@ const Home = () => {
     return sP >= startP && eP <= endP
   }
 
-  const tLabel = props => {
-    if (props.time)
-      return <WeekView.TimeScaleLabel
-        {...props}
-        style={{ height: '20px', lineHeight: '20px' }}
-        formatDate={(e) => dayjs(e).format('HH:mm')} />
-    else
-      return <WeekView.TimeScaleLabel
-        {...props}
-        style={{ height: '10px', lineHeight: '10px' }} />
+  const addAppointment = (e) => {
+    console.log(e)
+    setEditingApt({ ...editingApt, title: '', start: e.startDate, end: e.endDate })
+    setAptOption('新規予約')
+    setShowAptDlg(true)
   }
-  const tTick = props => (<WeekView.TimeScaleTickCell {...props} style={{ height: '20px' }} />);
-  const WeekViewTimeCell = props => (<WeekView.TimeTableCell {...props} style={{ height: '20px' }} onDoubleClick={(e) => { console.log(e) }} />);
+
+  // const tLabel = props => {
+  //   if (props.time)
+  //     return <WeekView.TimeScaleLabel
+  //       {...props}
+  //       style={{ height: '20px', lineHeight: '20px' }}
+  //       formatDate={(e) => dayjs(e).format('HH:mm')} />
+  //   else
+  //     return <WeekView.TimeScaleLabel
+  //       {...props}
+  //       style={{ height: '10px', lineHeight: '10px' }} />
+  // }
+  // const tTick = props => (<WeekView.TimeScaleTickCell {...props} style={{ height: '20px' }} />);
+  const WeekViewTimeCell = props => (<WeekView.TimeTableCell {...props} onDoubleClick={(e) => addAppointment(props)} />);
 
   return (
-    <section className='flex-1 w-full h-full'>
-      <Scheduler data={bookData} height={800}>
+    <section className='flex-1 w-full' style={{ height: 'calc(100vh - 118px);' }}>
+      <Scheduler data={bookData}>
         <ViewState currentDate={new Date()} />
         <EditingState
 
@@ -211,8 +223,6 @@ const Home = () => {
           startDayHour={0}
           endDayHour={24}
           cellDuration={60}
-          timeScaleLabelComponent={tLabel}
-          timeScaleTickCellComponent={tTick}
           timeTableCellComponent={WeekViewTimeCell}
         />
         <MonthView />
@@ -228,6 +238,7 @@ const Home = () => {
         />
         <AppointmentForm />
       </Scheduler>
+      {showAptDlg && <Appointment isOpen={showAptDlg} apt={editingApt} option={aptOption} handleClose={() => setShowAptDlg(false)} />}
     </section>);
 };
 

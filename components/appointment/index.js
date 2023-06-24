@@ -20,6 +20,8 @@ const Appointment = ({ isOpen, option, apt, handleClose, handleConfirm }) => {
 
     //予約追加
     const addBook = async (params) => {
+        console.log(params)
+
         const token = session.user.token;
         await fetch(`http://localhost:3000/api/book`, {
             method: "POST",
@@ -64,7 +66,7 @@ const Appointment = ({ isOpen, option, apt, handleClose, handleConfirm }) => {
 
     const confirm = async () => {
         let success = false;
-        await addMutation.mutateAsync({}, {
+        await addMutation.mutateAsync(newApt, {
             onSuccess: () => {
                 //この書き方はuseQueryを動かして、RerenderもFired
                 // queryClient.setQueryData([BOOKS], (oldData) => ([...oldData, data]))
@@ -86,8 +88,8 @@ const Appointment = ({ isOpen, option, apt, handleClose, handleConfirm }) => {
                             label="タイトル"
                             variant="standard"
                             fullWidth
-                            value={apt.title}
-                            onChange={(newValue) => setNewApt({ ...newApt, title: newValue })} />
+                            value={newApt.title}
+                            onChange={(e) => setNewApt({ ...newApt, title: e.target.value })} />
                     </Stack>
                     <Stack direction="row">
                         <LocalizationProvider dateAdapter={AdapterDayjs}>

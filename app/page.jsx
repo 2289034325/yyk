@@ -1,22 +1,18 @@
 "use client"
 
-import { ViewState, EditingState, IntegratedEditing } from '@devexpress/dx-react-scheduler';
-import {
-  Scheduler, Appointments, DayView, WeekView, MonthView,
-  Toolbar, ViewSwitcher, DateNavigator, TodayButton,
-  AppointmentForm,
-  AppointmentTooltip,
-  ConfirmationDialog,
-} from '@devexpress/dx-react-scheduler-material-ui';
 import { BOOKS, DEFAULT_BOOKABLE } from '@services/cache';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSession } from "next-auth/react";
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { v4 as uuid } from 'uuid';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import dayjs from 'dayjs';
 import Appointment from '@components/appointment';
+import FullCalendar from '@fullcalendar/react' // must go before plugins
+import dayGridPlugin from '@fullcalendar/daygrid' // a plugin!
+import interactionPlugin from "@fullcalendar/interaction" // needed for dayClick
+import timeGridPlugin from '@fullcalendar/timegrid'
 
 const Home = () => {
   const { data: session } = useSession();
@@ -41,8 +37,8 @@ const Home = () => {
     const data = await response.json();
 
     // const bookData = data.map(d => { return { event_id: d.id, title: d.title, start: new Date(d.start), end: new Date(d.end) } })
-
-    return bookData;
+    console.log(data)
+    return data;
   }
 
   //予約追加
@@ -95,12 +91,16 @@ const Home = () => {
     //enabled: false // disable this query from automatically running
   });
 
+  useEffect(() => {
+    refechBooks()
+  }, [])
+
   const dboToEntity = (dbo) => {
     return {
-      id: b.id,
-      title: b.title,
-      startDate: b.start,
-      endDate: b.end
+      id: dbo.id,
+      title: dbo.title,
+      start: dbo.start,
+      end: dbo.end
     }
   }
 
@@ -108,8 +108,8 @@ const Home = () => {
     return {
       id: entity.id,
       title: entity.title,
-      start: entity.startDate,
-      end: entity.endDate
+      start: entity.start,
+      end: entity.end
     }
   }
 
@@ -191,10 +191,17 @@ const Home = () => {
   }
 
   const addAppointment = (e) => {
+
     console.log(e)
-    setEditingApt({ ...editingApt, title: '', start: e.startDate, end: e.endDate })
+    setEditingApt({ id: uuid(), title: '', start: e.date, end: dayjs(e.date).add(1, 'hour') })
     setAptOption('新規予約')
     setShowAptDlg(true)
+  }
+
+  const AppointEditFinished = () => {
+
+    setShowAptDlg(false)
+    refechBooks()
   }
 
   // const tLabel = props => {
@@ -209,36 +216,29 @@ const Home = () => {
   //       style={{ height: '10px', lineHeight: '10px' }} />
   // }
   // const tTick = props => (<WeekView.TimeScaleTickCell {...props} style={{ height: '20px' }} />);
-  const WeekViewTimeCell = props => (<WeekView.TimeTableCell {...props} onDoubleClick={(e) => addAppointment(props)} />);
+  const WeekViewTimeCell = props => {
+    const cell = <WeekView.TimeTableCell {...props} onDoubleClick={(e) => addAppointment(props)} />
+
+    return cell
+  };
 
   return (
-    <section className='flex-1 w-full' style={{ height: 'calc(100vh - 118px);' }}>
-      <Scheduler data={bookData}>
-        <ViewState currentDate={new Date()} />
-        <EditingState
+    <section className='flex-1 w-full overflow-y-auto'>
+      <FullCalendar
+        height='100%'
+        initialView="timeGridWeek"
+        plugins={[timeGridPlugin, interactionPlugin]}
+        events={bookData}
+        dateClick={(e) => { if (e.jsEvent.detail == 2) addAppointment(e) }}
 
-        />
-        <IntegratedEditing />
-        <WeekView
-          startDayHour={0}
-          endDayHour={24}
-          cellDuration={60}
-          timeTableCellComponent={WeekViewTimeCell}
-        />
-        <MonthView />
-        <Toolbar />
-        <ViewSwitcher />
-        <DateNavigator />
-        <TodayButton />
-        <ConfirmationDialog />
-        <Appointments />
-        <AppointmentTooltip
-          showOpenButton
-          showDeleteButton
-        />
-        <AppointmentForm />
-      </Scheduler>
-      {showAptDlg && <Appointment isOpen={showAptDlg} apt={editingApt} option={aptOption} handleClose={() => setShowAptDlg(false)} />}
+      />
+      {showAptDlg &&
+        <Appointment
+          isOpen={showAptDlg}
+          apt={editingApt}
+          option={aptOption}
+          handleClose={() => setShowAptDlg(false)}
+          handleConfirm={AppointEditFinished} />}
     </section>);
 };
 

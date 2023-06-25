@@ -28,6 +28,8 @@ const Home = () => {
     // const nd = data.map(d => ({ day: d.day, spans: d.spans.map(s => ({ start: dayjs(`${s.startH}:${s.startM}`, "HH:mm"), end: dayjs(`${s.endH}:${s.endM}`, "HH:mm") })) }))
     // setNewSettings(nd)
 
+    console.log(data, '********************************')
+
     return data;
   }
 
@@ -93,6 +95,7 @@ const Home = () => {
 
   useEffect(() => {
     refechBooks()
+    refechBookable()
   }, [])
 
   const dboToEntity = (dbo) => {
@@ -127,6 +130,25 @@ const Home = () => {
     cacheTime: 10,
     initialData: []
   });
+
+  const businessHours = useMemo(() => {
+    if (!bookables)
+      return []
+
+    const hs = bookables.map(b => b.spans.map(s => (
+      {
+        daysOfWeek: [b.day],
+        startTime: s.start,
+        endTime: s.end
+      }))
+    ).flat()
+
+    console.log(hs)
+
+    return hs
+
+  }, [bookables])
+
   const addMutation = useMutation(addBook);
   const editMutation = useMutation(editBook);
   const deleteMutation = useMutation(deleteBook);
@@ -178,24 +200,53 @@ const Home = () => {
     return success ? eventId : null
   }
 
-  const checkTimeIsIn = (startH, startM, endH, endM, sH, sM, eH, eM) => {
-    const startP = startH + startM / 100
-    const endP = endH + endM / 100
-    const sP = sH + sM / 100
-    const eP = eH + eM / 100
+  // const checkTimeIsIn = (startH, startM, endH, endM, sH, sM, eH, eM) => {
+  //   const startP = startH + startM / 100
+  //   const endP = endH + endM / 100
+  //   const sP = sH + sM / 100
+  //   const eP = eH + eM / 100
 
-    console.log(startH, startM, endH, endM, sH, sM, eH, eM)
-    console.log(startP, endP, sP, eP)
+  //   console.log(startH, startM, endH, endM, sH, sM, eH, eM)
+  //   console.log(startP, endP, sP, eP)
 
-    return sP >= startP && eP <= endP
-  }
+  //   return sP >= startP && eP <= endP
+  // }
 
-  const addAppointment = (e) => {
+  const timeCellClick = (e) => {
+    // e.jsEvent.detail == 2
+    // console.log(e)
 
-    console.log(e)
+    //予約できる判断
+    if (!isBookable(e.date))
+      return
+
     setEditingApt({ id: uuid(), title: '', start: e.date, end: dayjs(e.date).add(1, 'hour') })
     setAptOption('新規予約')
     setShowAptDlg(true)
+  }
+
+  const isBookable = (datetime) => {
+    if (!bookables)
+      return false
+
+    const day = datetime.getDay()
+    const cellTimeStart = dayjs(dayjs(datetime).format("HH:mm"), "HH:mm")
+
+    const spans = bookables.find(r => r.day == day)?.spans
+    if (!spans)
+      return false
+
+    spans.forEach(s => {
+      console.log(dayjs(s.start, "HH:mm"))
+      console.log(cellTimeStart.isSame(dayjs(s.start, "HH:mm")))
+    })
+
+    if (spans.find(s =>
+      (cellTimeStart.isAfter(dayjs(s.start, "HH:mm")) || cellTimeStart.isSame(dayjs(s.start, "HH:mm"))) &&
+      (cellTimeStart.isBefore(dayjs(s.end, "HH:mm")) || cellTimeStart.isSame(dayjs(s.end, "HH:mm")))))
+      return true
+
+    return false
   }
 
   const AppointEditFinished = () => {
@@ -216,12 +267,22 @@ const Home = () => {
   //       style={{ height: '10px', lineHeight: '10px' }} />
   // }
   // const tTick = props => (<WeekView.TimeScaleTickCell {...props} style={{ height: '20px' }} />);
-  const WeekViewTimeCell = props => {
-    const cell = <WeekView.TimeTableCell {...props} onDoubleClick={(e) => addAppointment(props)} />
+  // const WeekViewTimeCell = props => {
+  //   const cell = <WeekView.TimeTableCell {...props} onDoubleClick={(e) => addAppointment(props)} />
 
-    return cell
-  };
+  //   return cell
+  // };
 
+  // slotLaneClassNames is for the whole line, not every cell
+  const getTimeCellClassName = (e) => {
+    // console.log(e, '......................')
+    // if (e.date.getDay() == 1 && e.date.getHours() == 8)
+    //   console.log('8888888888888')
+    // if (isBookable(e.date))
+    //   return "bg-blue-200"
+    // else
+    //   return "bg-gray-300"
+  }
   return (
     <section className='flex-1 w-full overflow-y-auto'>
       <FullCalendar
@@ -229,8 +290,9 @@ const Home = () => {
         initialView="timeGridWeek"
         plugins={[timeGridPlugin, interactionPlugin]}
         events={bookData}
-        dateClick={(e) => { if (e.jsEvent.detail == 2) addAppointment(e) }}
-
+        // slotLaneClassNames={getTimeCellClassName}
+        dateClick={timeCellClick}
+        businessHours={businessHours}
       />
       {showAptDlg &&
         <Appointment

@@ -14,14 +14,16 @@ import dayjs from 'dayjs';
 import { Clear } from '@mui/icons-material';
 
 const TimeSpanSetting = ({ day, spans, spansChanged }) => {
-
+    console.log(spans)
     // const [spans, setSpans] = useState(initSpans)
-    const [isDlgOpen, setIsDlgOpen] = useState(false)    
+    const [isDlgOpen, setIsDlgOpen] = useState(false)
     const [start, setStart] = useState(dayjs())
     const [end, setEnd] = useState(dayjs())
 
     //予約可能時間を削除
     const deleteSpan = (span) => {
+        console.log(span)
+
         var sps = spans.filter(s => s !== span)
 
         spansChanged(day, sps)

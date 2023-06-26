@@ -7,7 +7,7 @@ import DialogTitle from '@mui/material/DialogTitle';
 import { DEFAULT_BOOKABLE } from '@services/cache';
 import { useSession } from "next-auth/react";
 import { QueryClient, QueryClientProvider, useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Dashboard } from '@mui/icons-material';
 import dayjs from 'dayjs';
 
@@ -18,9 +18,15 @@ const BookSetting = ({ isOpen, handleClose }) => {
 
     //曜日別予約可能時間設定を取得
     const getDefaultBookable = async () => {
-        const response = await fetch(`/api/setting/default`, { method: "GET" });
+        const response = await fetch(`http://localhost:3000/api/setting/default`, { method: "GET" });
         const data = await response.json();
-        const nd = data.map(d => ({ day: d.day, spans: d.spans.map(s => ({ start: dayjs(`${s.startH}:${s.startM}`, "HH:mm"), end: dayjs(`${s.endH}:${s.endM}`, "HH:mm") })) }))
+
+        console.log(data)
+
+        const nd = data.map(d => ({ day: d.day, spans: d.spans.map(s => ({ start: dayjs(s.start, "HH:mm"), end: dayjs(s.end, "HH:mm") })) }))
+
+        console.log(nd)
+
         setNewSettings(nd)
 
         return data;
@@ -31,11 +37,13 @@ const BookSetting = ({ isOpen, handleClose }) => {
         const nds = params.map(p => ({
             day: p.day,
             spans: p.spans.map(s => (
-                { startH: s.start.$H, startM: s.start.$m, endH: s.end.$H, endM: s.end.$m }))
+                { start: s.start.format('HH:mm'), end: s.end.format('HH:mm') }))
         }))
 
+        console.log(nds, '8888888888888888888888')
+
         const token = session.user.token;
-        await fetch(`/api/setting/default`, {
+        await fetch(`http://localhost:3000/api/setting/default`, {
             method: "PUT",
             headers: {
                 'Authorization': 'Bearer ' + token,
@@ -48,20 +56,31 @@ const BookSetting = ({ isOpen, handleClose }) => {
 
     // データ操作
     const [newSettings, setNewSettings] = useState([])
-    const [staticDate] = useState(new Date());
-    useQuery([DEFAULT_BOOKABLE], {
-        queryFn: getDefaultBookable,
-        variables: {
-            date: staticDate
-        },
-        //ACTODO
-        //BUG! onCompleted NOT FIRED!
-        notifyOnNetworkStatusChange: true,
-        fetchPolicy: 'network-only',
-        onCompleted: (data) => {
-            setNewSettings(data)
-        },
+    // const [staticDate] = useState(new Date());
+    // const useQuery([DEFAULT_BOOKABLE], {
+    //     queryFn: getDefaultBookable,
+    //     // variables: {
+    //     //     date: staticDate
+    //     // },
+    //     //ACTODO
+    //     //BUG! onCompleted NOT FIRED!
+    //     notifyOnNetworkStatusChange: true,
+    //     fetchPolicy: 'network-only',
+    //     onCompleted: (data) => {
+    //         setNewSettings(data)
+    //     },
+    // });
+
+    const { refetch: refechBookable } = useQuery([DEFAULT_BOOKABLE], getDefaultBookable, {
+        refetchOnWindowFocus: false,
+        // enabled: false, // disable this query from automatically running
+        cacheTime: 10,
+        initialData: []
     });
+
+    useEffect(() => {
+        refechBookable()
+    }, [])
 
     const setMutation = useMutation(setDefaultBookable);
 
@@ -82,12 +101,15 @@ const BookSetting = ({ isOpen, handleClose }) => {
     }
 
     const confirmSetting = async () => {
-        console.log('confirm.......')
-        const newSetting = [];
+        console.log('confirm')
+
         await setMutation.mutateAsync(newSettings, {
             onSuccess: () => {
                 //この書き方はuseQueryを動かせない、自動的にRerenderさせない
-                queryClient.setQueryData([DEFAULT_BOOKABLE], (oldData) => (newSetting));
+                // queryClient.setQueryData([DEFAULT_BOOKABLE], (oldData) => (newSettings));
+                
+                //!!! ACTONTC DEFAULT_BOOKABLEを使っているComponentにrefetchを動かせる
+                queryClient.invalidateQueries(DEFAULT_BOOKABLE);
             }
         })
 

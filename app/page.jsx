@@ -143,7 +143,7 @@ const Home = () => {
       }))
     ).flat()
 
-    console.log(hs)
+    // console.log(hs)
 
     return hs
 
@@ -212,9 +212,14 @@ const Home = () => {
   //   return sP >= startP && eP <= endP
   // }
 
-  const timeCellClick = (e) => {
+  const cellClick = (e) => {
+    console.log(e)
     // e.jsEvent.detail == 2
     // console.log(e)
+
+    //MonthViewの場合、何もしない
+    if (e.view.type == 'dayGridMonth')
+      return
 
     //予約できる判断
     if (!isBookable(e.date))
@@ -237,8 +242,8 @@ const Home = () => {
       return false
 
     spans.forEach(s => {
-      console.log(dayjs(s.start, "HH:mm"))
-      console.log(cellTimeStart.isSame(dayjs(s.start, "HH:mm")))
+      // console.log(dayjs(s.start, "HH:mm"))
+      // console.log(cellTimeStart.isSame(dayjs(s.start, "HH:mm")))
     })
 
     if (spans.find(s =>
@@ -283,16 +288,23 @@ const Home = () => {
     // else
     //   return "bg-gray-300"
   }
+
   return (
     <section className='flex-1 w-full overflow-y-auto'>
       <FullCalendar
         height='100%'
         initialView="timeGridWeek"
-        plugins={[timeGridPlugin, interactionPlugin]}
+        plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
         events={bookData}
         // slotLaneClassNames={getTimeCellClassName}
-        dateClick={timeCellClick}
+        dateClick={cellClick}
         businessHours={businessHours}
+        allDaySlot={false}
+        headerToolbar={{
+          left: 'today prev,next',
+          center: 'title',
+          right: 'dayGridMonth,timeGridWeek'
+        }}
       />
       {showAptDlg &&
         <Appointment

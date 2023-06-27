@@ -16,7 +16,9 @@ const RootLayout = ({ children }) => {
           <QueryProvider>
             <main className='app flex h-screen flex-col'>
               <SiteHeader />
-              {children}
+              <section className='flex-1 w-full overflow-y-auto'>
+                {children}
+              </section>
             </main>
           </QueryProvider>
         </SessionProvider>

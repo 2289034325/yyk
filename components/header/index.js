@@ -23,9 +23,11 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import BookSetting from "@components/bookSetting";
+import { useRouter } from 'next/navigation';
 
 const SiteHeader = () => {
     const { data: session } = useSession()
+    const router = useRouter();
 
     const [providers, setProviders] = useState(null)
     const [toggleDropdown, setToggleDropdown] = useState(false)
@@ -118,7 +120,7 @@ const SiteHeader = () => {
                             transformOrigin={{ horizontal: 'right', vertical: 'top' }}
                             anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
                         >
-                            <MenuItem onClick={meClose}>
+                            <MenuItem onClick={() => { router.push('/profile'); }}>
                                 <Avatar /> Profile
                             </MenuItem>
                             <Divider />

@@ -327,7 +327,7 @@ const Home = () => {
   }
 
   return (
-    <section className='flex-1 w-full overflow-y-auto'>
+    <>
       <FullCalendar
         height='100%'
         initialView="timeGridWeek"
@@ -357,7 +357,7 @@ const Home = () => {
           option={aptOption}
           handleClose={() => setShowAptDlg(false)}
           handleFinish={AppointOptFinished} />}
-    </section>);
+    </>);
 };
 
 

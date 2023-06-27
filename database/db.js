@@ -3,7 +3,14 @@ import { v4 as uuid } from 'uuid';
 const db = {
     users: [{ id: '1', email: 'ngjc250@gmail.com', password: '123456', name: 'tom', role: 'admin', disabled: false }, { id: '2', email: 'ngjc250@hotmail.com', password: '123456', name: 'jim', role: 'user', disabled: false }],
     booked: [],
-    defaultBookable: [{ day: 1, spans: [{ start: '08:00', end: '12:00' }, { start: '13:00', end: '18:00' }] }],
+    defaultBookable: [
+        { day: 1, spans: [{ start: '08:00', end: '12:00' }, { start: '13:00', end: '18:00' }] },
+        { day: 2, spans: [{ start: '08:00', end: '12:00' }, { start: '13:00', end: '18:00' }] },
+        { day: 3, spans: [{ start: '08:00', end: '12:00' }, { start: '13:00', end: '18:00' }] },
+        { day: 4, spans: [{ start: '08:00', end: '12:00' }, { start: '13:00', end: '18:00' }] },
+        { day: 5, spans: [{ start: '08:00', end: '12:00' }, { start: '13:00', end: '18:00' }] },
+        { day: 6, spans: [] },
+        { day: 0, spans: [] }],
     specialBookable: [{ date: '', start: '', end: '', disable: false }]
 }
 
@@ -57,10 +64,15 @@ export function addBook(userId, id, title, start, end) {
 
 //生徒予約変更
 export function editBook(id, title, start, end) {
+    console.log(db.booked)
+    console.log(id, title, start, end)
+    
     const b = db.booked.find(r => r.id == id);
     b.title = title;
     b.start = start;
     b.end = end;
+    
+    console.log(db.booked)
 }
 
 //生徒予約削除

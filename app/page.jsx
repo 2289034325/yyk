@@ -212,6 +212,7 @@ const Home = () => {
   //   return sP >= startP && eP <= endP
   // }
 
+  //予約新規
   const cellClick = (e) => {
     console.log(e)
     // e.jsEvent.detail == 2
@@ -226,8 +227,44 @@ const Home = () => {
       return
 
     setEditingApt({ id: uuid(), title: '', start: e.date, end: dayjs(e.date).add(1, 'hour') })
-    setAptOption('新規予約')
+    setAptOption('ADD')
     setShowAptDlg(true)
+  }
+
+  //予約変更
+  const eventClick = (e) => {
+    const evt = { id: e.event.id, title: e.event.title, start: e.event.start, end: e.event.end }
+    console.log(evt)
+    setEditingApt(evt)
+    setAptOption('EDIT')
+    setShowAptDlg(true)
+  }
+
+  //予約移動
+  const eventDrop = async (e) => {
+    //新しい時間に移動可能チェック
+    const toDay = e.event.start.getDay()
+    const toStart = dayjs(dayjs(e.event.start).format("HH:mm"), "HH:mm")
+    const toEnd = dayjs(dayjs(e.event.end).format("HH:mm"), "HH:mm")
+    const spans = bookables.find(r => r.day == toDay)?.spans
+    if (!spans?.find(s =>
+      (toStart.isAfter(dayjs(s.start, "HH:mm")) || toStart.isSame(dayjs(s.start, "HH:mm"))) &&
+      (toEnd.isBefore(dayjs(s.end, "HH:mm")) || toEnd.isSame(dayjs(s.end, "HH:mm")))))
+      return e.revert()
+
+    var success = false;
+    // const newEvt = { id: e.oldEvent.id, title: e.oldEvent.title, start: e.event.start, end: e.event.end }
+    const newEvt = { id: e.event.id, title: e.event.title, start: e.event.start, end: e.event.end }
+    await editMutation.mutateAsync(newEvt, {
+      onSuccess: () => {
+        //この書き方はuseQueryを動かせない、自動的にRerenderさせない
+        // queryClient.setQueryData([BOOKS, { id: data.id }], data);
+        success = true;
+      }
+    })
+
+    if (!success)
+      e.revert()
   }
 
   const isBookable = (datetime) => {
@@ -254,7 +291,7 @@ const Home = () => {
     return false
   }
 
-  const AppointEditFinished = () => {
+  const AppointOptFinished = () => {
 
     setShowAptDlg(false)
     refechBooks()
@@ -294,17 +331,24 @@ const Home = () => {
       <FullCalendar
         height='100%'
         initialView="timeGridWeek"
+        headerToolbar={{
+          left: 'today prev,next',
+          center: 'title',
+          right: 'dayGridMonth,timeGridWeek'
+        }}
+        editable={true}
+        //not fired if drop to same place as drag from
+        eventDrop={eventDrop}
+        //always fire wherever it drops
+        eventDragStop={() => { }}
+        eventDurationEditable={false}
         plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
         events={bookData}
         // slotLaneClassNames={getTimeCellClassName}
         dateClick={cellClick}
         businessHours={businessHours}
         allDaySlot={false}
-        headerToolbar={{
-          left: 'today prev,next',
-          center: 'title',
-          right: 'dayGridMonth,timeGridWeek'
-        }}
+        eventClick={eventClick}
       />
       {showAptDlg &&
         <Appointment
@@ -312,7 +356,7 @@ const Home = () => {
           apt={editingApt}
           option={aptOption}
           handleClose={() => setShowAptDlg(false)}
-          handleConfirm={AppointEditFinished} />}
+          handleFinish={AppointOptFinished} />}
     </section>);
 };
 

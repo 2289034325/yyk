@@ -13,7 +13,7 @@ import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import EastIcon from '@mui/icons-material/East';
 
-const Appointment = ({ isOpen, option, apt, handleClose, handleConfirm }) => {
+const Appointment = ({ isOpen, option, apt, handleClose, handleFinish }) => {
     const { data: session } = useSession()
 
     const [newApt, setNewApt] = useState(apt)
@@ -64,9 +64,36 @@ const Appointment = ({ isOpen, option, apt, handleClose, handleConfirm }) => {
     const editMutation = useMutation(editBook);
     const deleteMutation = useMutation(deleteBook);
 
+    //新規・編集
     const confirm = async () => {
         let success = false;
-        await addMutation.mutateAsync(newApt, {
+        if (option == 'ADD') {
+            await addMutation.mutateAsync(newApt, {
+                onSuccess: () => {
+                    //この書き方はuseQueryを動かして、RerenderもFired
+                    // queryClient.setQueryData([BOOKS], (oldData) => ([...oldData, data]))
+                    success = true
+                }
+            })
+        }
+        else {
+            await editMutation.mutateAsync(newApt, {
+                onSuccess: () => {
+                    //この書き方はuseQueryを動かして、RerenderもFired
+                    // queryClient.setQueryData([BOOKS], (oldData) => ([...oldData, data]))
+                    success = true
+                }
+            })
+        }
+
+        if (success)
+            handleFinish()
+    }
+
+    //削除
+    const onDelete = async () => {
+        let success = false;
+        await deleteMutation.mutateAsync(newApt, {
             onSuccess: () => {
                 //この書き方はuseQueryを動かして、RerenderもFired
                 // queryClient.setQueryData([BOOKS], (oldData) => ([...oldData, data]))
@@ -75,12 +102,12 @@ const Appointment = ({ isOpen, option, apt, handleClose, handleConfirm }) => {
         })
 
         if (success)
-            handleConfirm()
+            handleFinish()
     }
 
     return (
         <Dialog open={isOpen}>
-            <DialogTitle>{option}</DialogTitle>
+            <DialogTitle>{option == 'ADD' ? '新規予約' : '予約変更'}</DialogTitle>
             <DialogContent>
                 <Stack direction="column" spacing={2} sx={{ minWidth: '500px' }}>
                     <Stack direction="row">
@@ -117,6 +144,9 @@ const Appointment = ({ isOpen, option, apt, handleClose, handleConfirm }) => {
                 </Stack>
             </DialogContent>
             <DialogActions>
+                {option == 'EDIT' &&
+                    <Button color='error' onClick={onDelete}>Delete</Button>
+                }
                 <Button onClick={handleClose}>Cancel</Button>
                 <Button onClick={confirm}>Confirm</Button>
             </DialogActions>

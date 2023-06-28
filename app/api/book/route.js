@@ -6,8 +6,6 @@ export const GET = async (request) => {
     try {
         const books = getBooked(Date.now(), Date.now())
 
-        console.log('books', books)
-
         return new Response(JSON.stringify(books), { status: 200 })
     } catch (error) {
         return new Response("システムエラー", { status: 500 })
@@ -43,7 +41,7 @@ export const PUT = async (request) => {
 
         return new Response()
     } catch (error) {
-        console.log('put', error, 'put')
+        console.log(error)
         return new Response("システムエラー", { status: 500 })
     }
 }
@@ -66,7 +64,7 @@ export const DELETE = async (request) => {
 
         return new Response('', { status: 200 })
     } catch (error) {
-        console.log('delete', error, 'delete')
+        console.log(error)
         return new Response("システムエラー", { status: 500 })
     }
 } 

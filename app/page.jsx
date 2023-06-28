@@ -28,8 +28,6 @@ const Home = () => {
     // const nd = data.map(d => ({ day: d.day, spans: d.spans.map(s => ({ start: dayjs(`${s.startH}:${s.startM}`, "HH:mm"), end: dayjs(`${s.endH}:${s.endM}`, "HH:mm") })) }))
     // setNewSettings(nd)
 
-    console.log(data, '********************************')
-
     return data;
   }
 
@@ -38,8 +36,6 @@ const Home = () => {
     const response = await fetch(`http://localhost:3000/api/book`, { method: "GET" });
     const data = await response.json();
 
-    // const bookData = data.map(d => { return { event_id: d.id, title: d.title, start: new Date(d.start), end: new Date(d.end) } })
-    console.log(data)
     return data;
   }
 
@@ -48,9 +44,9 @@ const Home = () => {
     const token = session.user.token;
     await fetch(`http://localhost:3000/api/book`, {
       method: "POST",
-      headers: {
-        'Authorization': 'Bearer ' + token,
-      },
+      // headers: {
+      //   'Authorization': 'Bearer ' + token,
+      // },
       body: JSON.stringify(params)
     });
   }
@@ -60,9 +56,9 @@ const Home = () => {
     const token = session.user.token;
     await fetch(`http://localhost:3000/api/book`, {
       method: "PUT",
-      headers: {
-        'Authorization': 'Bearer ' + token,
-      },
+      // headers: {
+      //   'Authorization': 'Bearer ' + token,
+      // },
       body: JSON.stringify(params)
     });
   }
@@ -76,9 +72,9 @@ const Home = () => {
     const token = session.user.token;
     await fetch(`http://localhost:3000/api/book?id=${params.id}`, {
       method: "DELETE",
-      headers: {
-        'Authorization': 'Bearer ' + token,
-      },
+      // headers: {
+      //   'Authorization': 'Bearer ' + token,
+      // },
       body: JSON.stringify(params)
     });
   }
@@ -117,7 +113,6 @@ const Home = () => {
   }
 
   const bookData = useMemo(() => {
-    console.log(books)
     if (!books)
       return []
 

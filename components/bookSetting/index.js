@@ -20,13 +20,7 @@ const BookSetting = ({ isOpen, handleClose }) => {
     const getDefaultBookable = async () => {
         const response = await fetch(`http://localhost:3000/api/setting/default`, { method: "GET" });
         const data = await response.json();
-
-        console.log(data)
-
         const nd = data.map(d => ({ day: d.day, spans: d.spans.map(s => ({ start: dayjs(s.start, "HH:mm"), end: dayjs(s.end, "HH:mm") })) }))
-
-        console.log(nd)
-
         setNewSettings(nd)
 
         return data;
@@ -40,14 +34,12 @@ const BookSetting = ({ isOpen, handleClose }) => {
                 { start: s.start.format('HH:mm'), end: s.end.format('HH:mm') }))
         }))
 
-        console.log(nds, '8888888888888888888888')
-
         const token = session.user.token;
         await fetch(`http://localhost:3000/api/setting/default`, {
             method: "PUT",
-            headers: {
-                'Authorization': 'Bearer ' + token,
-            },
+            // headers: {
+            //     'Authorization': 'Bearer ' + token,
+            // },
             body: JSON.stringify(nds)
         });
     }
@@ -101,8 +93,6 @@ const BookSetting = ({ isOpen, handleClose }) => {
     }
 
     const confirmSetting = async () => {
-        console.log('confirm')
-
         await setMutation.mutateAsync(newSettings, {
             onSuccess: () => {
                 //この書き方はuseQueryを動かせない、自動的にRerenderさせない

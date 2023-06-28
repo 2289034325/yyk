@@ -82,7 +82,7 @@ const SiteHeader = () => {
                                 aria-haspopup="true"
                                 aria-expanded={open ? 'true' : undefined}
                             >
-                                <Avatar sx={{ width: 32, height: 32 }}>M</Avatar>
+                                <Avatar sx={{ width: 32, height: 32 }}>{session?.user?.name?.substring(0,1)}</Avatar>
                             </IconButton>
                         </Tooltip>
                         <Menu

@@ -64,20 +64,20 @@ export function addBook(userId, id, title, start, end) {
 
 //生徒予約変更
 export function editBook(id, title, start, end) {
-    console.log(db.booked)
-    console.log(id, title, start, end)
-    
     const b = db.booked.find(r => r.id == id);
     b.title = title;
     b.start = start;
     b.end = end;
-    
-    console.log(db.booked)
 }
 
 //生徒予約削除
 export function deleteBook(id) {
     db.booked = db.booked.filter(b => b.id != id);
+}
+
+export function editUserInfo(id, name) {
+    const user = db.users.find(r => r.id == id)
+    user.name = name
 }
 
 

@@ -20,14 +20,12 @@ const Appointment = ({ isOpen, option, apt, handleClose, handleFinish }) => {
 
     //予約追加
     const addBook = async (params) => {
-        console.log(params)
-
         const token = session.user.token;
         await fetch(`http://localhost:3000/api/book`, {
             method: "POST",
-            headers: {
-                'Authorization': 'Bearer ' + token,
-            },
+            // headers: {
+            //     'Authorization': 'Bearer ' + token,
+            // },
             body: JSON.stringify(params)
         });
     }
@@ -37,9 +35,9 @@ const Appointment = ({ isOpen, option, apt, handleClose, handleFinish }) => {
         const token = session.user.token;
         await fetch(`http://localhost:3000/api/book`, {
             method: "PUT",
-            headers: {
-                'Authorization': 'Bearer ' + token,
-            },
+            // headers: {
+            //     'Authorization': 'Bearer ' + token,
+            // },
             body: JSON.stringify(params)
         });
     }
@@ -53,9 +51,9 @@ const Appointment = ({ isOpen, option, apt, handleClose, handleFinish }) => {
         const token = session.user.token;
         await fetch(`http://localhost:3000/api/book?id=${params.id}`, {
             method: "DELETE",
-            headers: {
-                'Authorization': 'Bearer ' + token,
-            },
+            // headers: {
+            //     'Authorization': 'Bearer ' + token,
+            // },
             body: JSON.stringify(params)
         });
     }

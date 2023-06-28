@@ -26,24 +26,24 @@ const handler = NextAuth({
 
                 const user = authenticate(email, password);
 
-                const secret = process.env.NEXTAUTH_SECRET;
-                const token = jwt.sign(user, secret);
-
-                user.token = token;
-
                 return user;
             },
         })
     ],
     callbacks: {
         async jwt(params) {
-            const { token, user } = params;
-            return { ...token, ...user };
+            const { token, user, trigger, session } = params
+            if (user) token.role = user.role
+            if (trigger === "update" && session?.name) {
+                token.name = session.name
+            }
+            return token
         },
         async session(params) {
-            const { session, token } = params;
-            session.user = token;
-            return session;
+            const { session, token } = params
+            session.user.role = token.role
+            session.user.id = token.sub
+            return session
         }
     },
 })

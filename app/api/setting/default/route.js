@@ -24,7 +24,7 @@ export const PUT = async (request) => {
 
         return new Response('', { status: 200 })
     } catch (error) {
-        console.log('put', error, 'put')
+        console.log(error)
         return new Response("システムエラー", { status: 500 })
     }
 }

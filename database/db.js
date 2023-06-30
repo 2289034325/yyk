@@ -62,6 +62,10 @@ export function addBook(userId, id, title, start, end) {
     db.booked.push(b)
 }
 
+export function getBook(id) {
+    return db.booked.find(r => r.id == id)
+}
+
 //生徒予約変更
 export function editBook(id, title, start, end) {
     const b = db.booked.find(r => r.id == id);

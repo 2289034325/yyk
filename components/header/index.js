@@ -56,7 +56,7 @@ const SiteHeader = () => {
     }
 
     return (
-        <nav className='flex-between w-full mb-16 pt-3'>
+        <nav className='flex-between w-full mb-3'>
             <Link href='/' className='flex gap-2 flex-center'>
                 <Image
                     src='/assets/images/logo.svg'
@@ -82,7 +82,7 @@ const SiteHeader = () => {
                                 aria-haspopup="true"
                                 aria-expanded={open ? 'true' : undefined}
                             >
-                                <Avatar sx={{ width: 32, height: 32 }}>{session?.user?.name?.substring(0,1)}</Avatar>
+                                <Avatar sx={{ width: 32, height: 32 }}>{session?.user?.name?.substring(0, 1)}</Avatar>
                             </IconButton>
                         </Tooltip>
                         <Menu
@@ -124,12 +124,14 @@ const SiteHeader = () => {
                                 <Avatar /> Profile
                             </MenuItem>
                             <Divider />
-                            <MenuItem onClick={() => setIsSetDlgOpen(true)}>
-                                <ListItemIcon>
-                                    <Settings fontSize="small" />
-                                </ListItemIcon>
-                                Settings
-                            </MenuItem>
+                            {session?.user?.role == 'admin' &&
+                                <MenuItem onClick={() => setIsSetDlgOpen(true)}>
+                                    <ListItemIcon>
+                                        <Settings fontSize="small" />
+                                    </ListItemIcon>
+                                    Settings
+                                </MenuItem>
+                            }
                             <MenuItem onClick={signOut}>
                                 <ListItemIcon>
                                     <Logout fontSize="small" />

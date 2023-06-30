@@ -1,4 +1,4 @@
-import { addBook, deleteBook, editBook, getBooked } from '@database/db'
+import { addBook, deleteBook, editBook, getBook, getBooked } from '@database/db'
 import { getToken } from "next-auth/jwt";
 import jwt from "jsonwebtoken";
 
@@ -14,13 +14,11 @@ export const GET = async (request) => {
 
 export const POST = async (request) => {
     try {
-        const secret = process.env.NEXTAUTH_SECRET;
+        // const secret = process.env.NEXTAUTH_SECRET;
         const ut = await getToken({ req: request });
-        const token = ut.token;
-        const user = jwt.verify(token, secret);
 
         const { id, title, start, end } = await request.json()
-        addBook(user.id, id, title, start, end)
+        addBook(ut.sub, id, title, start, end)
 
         return new Response()
     } catch (error) {
@@ -31,12 +29,13 @@ export const POST = async (request) => {
 
 export const PUT = async (request) => {
     try {
-        const secret = process.env.NEXTAUTH_SECRET;
         const ut = await getToken({ req: request });
-        const token = ut.token;
-        const user = jwt.verify(token, secret);
 
         const { id, title, start, end } = await request.json()
+        const book = getBook(id)
+        if (book?.userId != ut?.sub)
+            return new Response("システムエラー", { status: 500 })
+
         editBook(id, title, start, end)
 
         return new Response()
@@ -54,10 +53,10 @@ export const DELETE = async (request) => {
         //ugly degin
         const id = request.nextUrl.searchParams.get("id");
 
-        const secret = process.env.NEXTAUTH_SECRET;
         const ut = await getToken({ req: request });
-        const token = ut.token;
-        const user = jwt.verify(token, secret);
+        const book = getBook(id)
+        if (book?.userId != ut?.sub)
+            return new Response("システムエラー", { status: 500 })
 
         // const { id } = await request.json()
         deleteBook(id)

@@ -14,10 +14,11 @@ export const GET = async (request) => {
 
 export const PUT = async (request) => {
     try {
-        const secret = process.env.NEXTAUTH_SECRET;
         const ut = await getToken({ req: request });
-        const token = ut.token;
-        const user = jwt.verify(token, secret);
+
+        if (ut.role != 'admin')
+            return new Response('権限なし', { status: 500 })
+
 
         const settings = await request.json()
         setDefaultBookable(settings)

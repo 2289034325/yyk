@@ -1,4 +1,4 @@
-import { editUserInfo } from '@database/db';
+import { editUserInfo } from '../../../database/db';
 import { getToken } from "next-auth/jwt";
 
 export const PUT = async (request) => {

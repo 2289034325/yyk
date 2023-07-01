@@ -1,17 +1,15 @@
+import { Clear } from '@mui/icons-material';
 import { Box, Chip } from '@mui/material';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
-import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import { TimeField } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { TimePicker } from '@mui/x-date-pickers/TimePicker';
-import { useState } from 'react';
 import dayjs from 'dayjs';
-import { Clear } from '@mui/icons-material';
+import { useState } from 'react';
 
 const TimeSpanSetting = ({ day, spans, spansChanged }) => {
     const [isDlgOpen, setIsDlgOpen] = useState(false)

@@ -1,8 +1,7 @@
 import NextAuth from 'next-auth';
-import CredentialsProvider from 'next-auth/providers/credentials'
-import jwt from "jsonwebtoken";
+import CredentialsProvider from 'next-auth/providers/credentials';
 
-import { authenticate, logon } from '@database/db';
+import { authenticate } from '../../../../database/db';
 
 const handler = NextAuth({
     session: {
@@ -51,6 +50,6 @@ const handler = NextAuth({
     },
 })
 
-export { handler as GET, handler as POST }
+export { handler as GET, handler as POST };
 
 

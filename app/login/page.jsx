@@ -1,13 +1,11 @@
 "use client"
 
-import { Box, Stack, TextField, Button, Hidden, Snackbar, Alert } from '@mui/material'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import React, { useMemo } from 'react'
-import { useSession } from "next-auth/react";
+import { Alert, Box, Button, Snackbar, Stack, TextField } from '@mui/material';
 import { useFormik } from 'formik';
+import { signIn } from "next-auth/react";
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import * as yup from 'yup';
-import { providers, signIn, getSession, csrfToken } from "next-auth/react";
-import { useRouter } from 'next/navigation'
 
 const validationSchema = yup.object({
     email: yup
@@ -21,7 +19,7 @@ const validationSchema = yup.object({
 const Login = () => {
     const router = useRouter();
 
-    const [sbState, setSbState] = React.useState({
+    const [sbState, setSbState] = useState({
         sbOpen: false,
         sbSeverity: 'success',
         sbMessage: ''

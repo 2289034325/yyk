@@ -1,18 +1,17 @@
 "use client"
 
-import { BOOKS, DEFAULT_BOOKABLE } from '@services/cache';
+import dayGridPlugin from '@fullcalendar/daygrid'; // a plugin!
+import interactionPlugin from "@fullcalendar/interaction"; // needed for dayClick
+import FullCalendar from '@fullcalendar/react'; // must go before plugins
+import timeGridPlugin from '@fullcalendar/timegrid';
+import { Alert, Snackbar } from '@mui/material';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import dayjs from 'dayjs';
 import { useSession } from "next-auth/react";
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { v4 as uuid } from 'uuid';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import dayjs from 'dayjs';
-import Appointment from '@components/appointment';
-import FullCalendar from '@fullcalendar/react' // must go before plugins
-import dayGridPlugin from '@fullcalendar/daygrid' // a plugin!
-import interactionPlugin from "@fullcalendar/interaction" // needed for dayClick
-import timeGridPlugin from '@fullcalendar/timegrid'
+import Appointment from '../components/appointment';
+import { BOOKS, DEFAULT_BOOKABLE } from '../services/cache';
 
 const Home = () => {
   const { data: session } = useSession();
@@ -20,6 +19,14 @@ const Home = () => {
   const [showAptDlg, setShowAptDlg] = useState(false)
   const [aptOption, setAptOption] = useState('')
   const [editingApt, setEditingApt] = useState({})
+
+  //操作結果メッセージ
+  const [sbState, setSbState] = useState({
+    sbOpen: false,
+    sbSeverity: 'success',
+    sbMessage: ''
+  });
+  const { sbMessage, sbSeverity, sbOpen } = sbState;
 
   //曜日別予約可能時間設定を取得
   const getDefaultBookable = async () => {
@@ -53,14 +60,7 @@ const Home = () => {
 
   //予約変更
   const editBook = async (params) => {
-    const token = session.user.token;
-    await fetch(`http://localhost:3000/api/book`, {
-      method: "PUT",
-      // headers: {
-      //   'Authorization': 'Bearer ' + token,
-      // },
-      body: JSON.stringify(params)
-    });
+    return fetch(`http://localhost:3000/api/book`, { method: "PUT", body: JSON.stringify(params) });
   }
 
   //予約削除
@@ -182,31 +182,6 @@ const Home = () => {
     }
   }
 
-  //予約削除
-  const onDelete = async (eventId) => {
-    var success = false;
-    await deleteMutation.mutateAsync({ id: eventId }, {
-      onSuccess: () => {
-        // queryClient.setQueryData([BOOKS], (oldData) => oldData.filter(r => r.id != eventId));
-        success = true;
-      }
-    })
-
-    return success ? eventId : null
-  }
-
-  // const checkTimeIsIn = (startH, startM, endH, endM, sH, sM, eH, eM) => {
-  //   const startP = startH + startM / 100
-  //   const endP = endH + endM / 100
-  //   const sP = sH + sM / 100
-  //   const eP = eH + eM / 100
-
-  //   console.log(startH, startM, endH, endM, sH, sM, eH, eM)
-  //   console.log(startP, endP, sP, eP)
-
-  //   return sP >= startP && eP <= endP
-  // }
-
   //予約新規
   const cellClick = (e) => {
     console.log(e)
@@ -251,10 +226,14 @@ const Home = () => {
     // const newEvt = { id: e.oldEvent.id, title: e.oldEvent.title, start: e.event.start, end: e.event.end }
     const newEvt = { id: e.event.id, title: e.event.title, start: e.event.start, end: e.event.end }
     await editMutation.mutateAsync(newEvt, {
-      onSuccess: () => {
+      onSuccess: (res) => {
+        console.log(res)
         //この書き方はuseQueryを動かせない、自動的にRerenderさせない
         // queryClient.setQueryData([BOOKS, { id: data.id }], data);
-        success = true;
+        if (res.ok)
+          success = true;
+        else
+          setSbState({ ...sbState, sbSeverity: 'error', sbOpen: true, sbMessage: res.text() })
       }
     })
 
@@ -352,6 +331,18 @@ const Home = () => {
           option={aptOption}
           handleClose={() => setShowAptDlg(false)}
           handleFinish={AppointOptFinished} />}
+
+      <Snackbar
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+        open={sbOpen}
+        onClose={() => { setSbState({ ...sbState, sbOpen: false }) }}
+        message={sbMessage}
+        autoHideDuration={2000}
+      >
+        <Alert severity={sbSeverity} sx={{ width: '100%' }}>
+          {sbMessage}
+        </Alert>
+      </Snackbar>
     </>);
 };
 

@@ -1,7 +1,7 @@
-import '@styles/globals.css';
-import SiteHeader from '@components/header';
-import SessionProvider from '@components/provider/session';
-import QueryProvider from '@components/provider/query';
+import '../styles/globals.css';
+import SiteHeader from '../components/header';
+import SessionProvider from '../components/provider/session';
+import QueryProvider from '../components/provider/query';
 
 export const metadata = {
   title: '予約',

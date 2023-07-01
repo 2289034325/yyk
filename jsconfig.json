@@ -1,7 +1,8 @@
 {
   "compilerOptions": {
     "paths": {
-      "@*": ["./*"]
+      //!!! ACTODO cause error in turbopack
+      // "@*": ["./*"]
     }
   }
 }

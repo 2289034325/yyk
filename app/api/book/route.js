@@ -1,6 +1,5 @@
-import { addBook, deleteBook, editBook, getBook, getBooked } from '@database/db'
 import { getToken } from "next-auth/jwt";
-import jwt from "jsonwebtoken";
+import { addBook, deleteBook, editBook, getBook, getBooked } from '../../../database/db';
 
 export const GET = async (request) => {
     try {

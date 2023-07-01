@@ -1,10 +1,10 @@
 "use client"
 
-import { Box, Stack, TextField, Button, Hidden, Snackbar, Alert } from '@mui/material'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import React, { useMemo } from 'react'
-import { useSession } from "next-auth/react";
+import { Alert, Box, Button, Snackbar, Stack, TextField } from '@mui/material';
+import { useMutation } from '@tanstack/react-query';
 import { useFormik } from 'formik';
+import { useSession } from "next-auth/react";
+import { useMemo } from 'react';
 import * as yup from 'yup';
 
 const validationSchema = yup.object({
@@ -17,7 +17,7 @@ const validationSchema = yup.object({
 const Profile = () => {
     const { data: session, update } = useSession();
 
-    const [sbState, setSbState] = React.useState({
+    const [sbState, setSbState] = useState({
         sbOpen: false,
         sbSeverity: 'success',
         sbMessage: ''

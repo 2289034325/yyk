@@ -4,7 +4,10 @@ export function middleware(request) {
     const userToken = request.cookies.get('next-auth.session-token')?.value;
 
     if (!userToken) {
-        return NextResponse.redirect(new URL('/login', request.url))
+        console.log(request.cookies)
+
+        //!!! ACTODO cause endless loop of loading homepage
+        // return NextResponse.redirect(new URL('/login', request.url))
     }
 }
 

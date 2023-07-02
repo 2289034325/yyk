@@ -82,6 +82,8 @@ export function deleteBook(id) {
 export function editUserInfo(id, name) {
     const user = db.users.find(r => r.id == id)
     user.name = name
+
+    return user
 }
 
 

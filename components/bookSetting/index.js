@@ -9,15 +9,23 @@ import { useSession } from "next-auth/react";
 import { useEffect, useState } from 'react';
 import TimeSpanSetting from '../../components/timespan';
 import { DEFAULT_BOOKABLE } from '../../services/cache';
+import { useAuthContext } from '../provider/auth';
 
 //曜日別予約可能時間設定
 const BookSetting = ({ isOpen, handleClose }) => {
 
-    const { data: session } = useSession();
+    // const { data: session } = useSession();
+    const { user, token } = useAuthContext()
 
     //曜日別予約可能時間設定を取得
     const getDefaultBookable = async () => {
-        const response = await fetch(`http://localhost:3000/api/setting/default`, { method: "GET" });
+        const response = await fetch(`http://localhost:3000/api/setting/default`,
+            {
+                method: "GET",
+                headers: {
+                    'Authorization': 'Bearer ' + token,
+                },
+            });
         const data = await response.json();
         const nd = data.map(d => ({ day: d.day, spans: d.spans.map(s => ({ start: dayjs(s.start, "HH:mm"), end: dayjs(s.end, "HH:mm") })) }))
         setNewSettings(nd)
@@ -33,12 +41,11 @@ const BookSetting = ({ isOpen, handleClose }) => {
                 { start: s.start.format('HH:mm'), end: s.end.format('HH:mm') }))
         }))
 
-        const token = session.user.token;
         await fetch(`http://localhost:3000/api/setting/default`, {
             method: "PUT",
-            // headers: {
-            //     'Authorization': 'Bearer ' + token,
-            // },
+            headers: {
+                'Authorization': 'Bearer ' + token,
+            },
             body: JSON.stringify(nds)
         });
     }
@@ -96,7 +103,7 @@ const BookSetting = ({ isOpen, handleClose }) => {
             onSuccess: () => {
                 //この書き方はuseQueryを動かせない、自動的にRerenderさせない
                 // queryClient.setQueryData([DEFAULT_BOOKABLE], (oldData) => (newSettings));
-                
+
                 //!!! ACTONTC DEFAULT_BOOKABLEを使っているComponentにrefetchを動かせる
                 queryClient.invalidateQueries(DEFAULT_BOOKABLE);
             }

@@ -13,9 +13,13 @@ export const GET = async (request) => {
 
 export const PUT = async (request) => {
     try {
-        const ut = await getToken({ req: request });
+        const secret = process.env.NEXTAUTH_SECRET;
+        const token = (headers().get("authorization") || '').split("Bearer ").at(1)
+        const user = jwt.verify(token, secret);
+        if (!user)
+            return new Response("システムエラー", { status: 401 })
 
-        if (ut.role != 'admin')
+        if (user.role != 'admin')
             return new Response('権限なし', { status: 500 })
 
 

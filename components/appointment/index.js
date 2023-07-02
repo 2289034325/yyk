@@ -10,9 +10,12 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { useMutation } from '@tanstack/react-query';
 import { useSession } from "next-auth/react";
 import { useState } from 'react';
+import { useAuthContext } from '../provider/auth';
 
 const Appointment = ({ isOpen, option, apt, handleClose, handleFinish }) => {
-    const { data: session } = useSession()
+    // const { data: session } = useSession()
+
+    const { token } = useAuthContext()
 
     const [newApt, setNewApt] = useState(apt)
 
@@ -26,12 +29,26 @@ const Appointment = ({ isOpen, option, apt, handleClose, handleFinish }) => {
 
     //予約追加
     const addBook = async (params) => {
-        return fetch(`http://localhost:3000/api/book`, { method: "POST", body: JSON.stringify(params) });
+        return fetch(`http://localhost:3000/api/book`,
+            {
+                method: "POST",
+                headers: {
+                    'Authorization': 'Bearer ' + token,
+                },
+                body: JSON.stringify(params)
+            });
     }
 
     //予約変更
     const editBook = async (params) => {
-        return fetch(`http://localhost:3000/api/book`, { method: "PUT", body: JSON.stringify(params) });
+        return fetch(`http://localhost:3000/api/book`,
+            {
+                method: "PUT",
+                headers: {
+                    'Authorization': 'Bearer ' + token,
+                },
+                body: JSON.stringify(params)
+            });
     }
 
     //予約削除
@@ -40,7 +57,14 @@ const Appointment = ({ isOpen, option, apt, handleClose, handleFinish }) => {
     //passing id from url params to solve the problem.
     //or using dynamic path api
     const deleteBook = async (params) => {
-        return fetch(`http://localhost:3000/api/book?id=${params.id}`, { method: "DELETE", body: JSON.stringify(params) });
+        return fetch(`http://localhost:3000/api/book?id=${params.id}`,
+            {
+                method: "DELETE",
+                headers: {
+                    'Authorization': 'Bearer ' + token,
+                },
+                body: JSON.stringify(params)
+            });
     }
 
     const addMutation = useMutation(addBook);

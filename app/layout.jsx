@@ -1,7 +1,13 @@
+'use client'
+
 import '../styles/globals.css';
 import SiteHeader from '../components/header';
 import SessionProvider from '../components/provider/session';
 import QueryProvider from '../components/provider/query';
+import { AuthProvider, useAuthContext } from '../components/provider/auth';
+
+import { useEffect, useContext } from 'react';
+import { useRouter } from 'next/navigation';
 
 export const metadata = {
   title: '予約',
@@ -9,11 +15,13 @@ export const metadata = {
 }
 
 const RootLayout = ({ children }) => {
+  
+
   return (
     <html lang='jp'>
       <head></head>
       <body>
-        <SessionProvider>
+        <AuthProvider>          
           <QueryProvider>
             <main className='app flex h-screen flex-col'>
               <SiteHeader />
@@ -22,7 +30,7 @@ const RootLayout = ({ children }) => {
               </section>
             </main>
           </QueryProvider>
-        </SessionProvider>
+        </AuthProvider>
       </body>
     </html>
   )

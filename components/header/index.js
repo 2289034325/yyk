@@ -9,16 +9,19 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import Tooltip from '@mui/material/Tooltip';
-import { getProviders, signIn, signOut, useSession } from "next-auth/react";
+// import { getProviders, signIn, signOut, useSession } from "next-auth/react";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 import { useRouter } from 'next/navigation';
 import BookSetting from "../../components/bookSetting";
+import { useAuthContext } from '../provider/auth';
 
 const SiteHeader = () => {
-    const { data: session } = useSession()
+    // const { data: session } = useSession()
+    const { user, setToken } = useAuthContext()
+
     const router = useRouter();
 
     const [providers, setProviders] = useState(null)
@@ -29,12 +32,23 @@ const SiteHeader = () => {
 
     const menuOpen = anchorEl ? true : false;
 
+    // const { user } = useAuthContext()
+    // const router = useRouter()
+    const rc = useRef(0)
     useEffect(() => {
-        (async () => {
-            const res = await getProviders();
-            setProviders(res);
-        })();
-    }, []);
+        rc.current++
+
+        console.log(user, rc.current)
+        if (!user)
+            router.push("/login")
+    });
+
+    // useEffect(() => {
+    //     (async () => {
+    //         const res = await getProviders();
+    //         setProviders(res);
+    //     })();
+    // }, []);
 
     const meClick = (event) => {
         setAnchorEl(event.currentTarget);
@@ -62,7 +76,7 @@ const SiteHeader = () => {
 
             {/* Desktop Navigation */}
             <div className='sm:flex hidden'>
-                {session?.user ? (
+                {user ? (
                     <div className='flex items-center gap-3 md:gap-5'>
 
                         <Tooltip title="Account settings">
@@ -74,7 +88,7 @@ const SiteHeader = () => {
                                 aria-haspopup="true"
                                 aria-expanded={open ? 'true' : undefined}
                             >
-                                <Avatar sx={{ width: 32, height: 32 }}>{session?.user?.name?.substring(0, 1)}</Avatar>
+                                <Avatar sx={{ width: 32, height: 32 }}>{user?.name?.substring(0, 1)}</Avatar>
                             </IconButton>
                         </Tooltip>
                         <Menu
@@ -116,7 +130,7 @@ const SiteHeader = () => {
                                 <Avatar /> Profile
                             </MenuItem>
                             <Divider />
-                            {session?.user?.role == 'admin' &&
+                            {user?.role == 'admin' &&
                                 <MenuItem onClick={() => setIsSetDlgOpen(true)}>
                                     <ListItemIcon>
                                         <Settings fontSize="small" />
@@ -124,7 +138,7 @@ const SiteHeader = () => {
                                     Settings
                                 </MenuItem>
                             }
-                            <MenuItem onClick={signOut}>
+                            <MenuItem onClick={() => setToken('')}>
                                 <ListItemIcon>
                                     <Logout fontSize="small" />
                                 </ListItemIcon>
@@ -135,7 +149,7 @@ const SiteHeader = () => {
                 ) : (
                     <button
                         type='button'
-                        onClick={signIn}
+                        onClick={() => { router.push('/login') }}
                         className='black_btn'>
                         Sign in
                     </button>

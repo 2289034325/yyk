@@ -1,7 +1,7 @@
 import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 
-import { authenticate } from '../../../../database/db';
+import { authenticate } from '../../../database/db';
 
 const handler = NextAuth({
     session: {

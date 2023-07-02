@@ -1,5 +1,7 @@
 import { getToken } from "next-auth/jwt";
 import { addBook, deleteBook, editBook, getBook, getBooked } from '../../../database/db';
+import jwt from "jsonwebtoken";
+import { headers } from "next/headers";
 
 export const GET = async (request) => {
     try {
@@ -13,11 +15,15 @@ export const GET = async (request) => {
 
 export const POST = async (request) => {
     try {
-        // const secret = process.env.NEXTAUTH_SECRET;
-        const ut = await getToken({ req: request });
+        const secret = process.env.NEXTAUTH_SECRET;
+        //!!! headers().get("authorization") 神经病
+        const token = (headers().get("authorization") || '').split("Bearer ").at(1)
+        const user = jwt.verify(token, secret);
+        if (!user)
+            return new Response("システムエラー", { status: 401 })
 
         const { id, title, start, end } = await request.json()
-        addBook(ut.sub, id, title, start, end)
+        addBook(user.id, id, title, start, end)
 
         return new Response()
     } catch (error) {
@@ -28,11 +34,15 @@ export const POST = async (request) => {
 
 export const PUT = async (request) => {
     try {
-        const ut = await getToken({ req: request });
+        const secret = process.env.NEXTAUTH_SECRET;
+        const token = (headers().get("authorization") || '').split("Bearer ").at(1)
+        const user = jwt.verify(token, secret);
+        if (!user)
+            return new Response("システムエラー", { status: 401 })
 
         const { id, title, start, end } = await request.json()
         const book = getBook(id)
-        if (book?.userId != ut?.sub)
+        if (book?.userId != user?.id)
             return new Response("システムエラー", { status: 500 })
 
         editBook(id, title, start, end)
@@ -52,9 +62,14 @@ export const DELETE = async (request) => {
         //ugly degin
         const id = request.nextUrl.searchParams.get("id");
 
-        const ut = await getToken({ req: request });
+        const secret = process.env.NEXTAUTH_SECRET;
+        const token = (headers().get("authorization") || '').split("Bearer ").at(1)
+        const user = jwt.verify(token, secret);
+        if (!user)
+            return new Response("システムエラー", { status: 401 })
+
         const book = getBook(id)
-        if (book?.userId != ut?.sub)
+        if (book?.userId != user?.id)
             return new Response("システムエラー", { status: 500 })
 
         // const { id } = await request.json()

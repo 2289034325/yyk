@@ -12,9 +12,12 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { v4 as uuid } from 'uuid';
 import Appointment from '../components/appointment';
 import { BOOKS, DEFAULT_BOOKABLE } from '../services/cache';
+import { useAuthContext } from '../components/provider/auth';
 
 const Home = () => {
-  const { data: session } = useSession();
+  // const { data: session } = useSession();
+
+  const { user, token } = useAuthContext()
 
   const [showAptDlg, setShowAptDlg] = useState(false)
   const [aptOption, setAptOption] = useState('')
@@ -30,7 +33,13 @@ const Home = () => {
 
   //曜日別予約可能時間設定を取得
   const getDefaultBookable = async () => {
-    const response = await fetch(`http://localhost:3000/api/setting/default`, { method: "GET" });
+    const response = await fetch(`http://localhost:3000/api/setting/default`, {
+      method: "GET",
+      headers:
+      {
+        'Authorization': 'Bearer ' + token,
+      },
+    });
     const data = await response.json();
     // const nd = data.map(d => ({ day: d.day, spans: d.spans.map(s => ({ start: dayjs(`${s.startH}:${s.startM}`, "HH:mm"), end: dayjs(`${s.endH}:${s.endM}`, "HH:mm") })) }))
     // setNewSettings(nd)
@@ -40,7 +49,13 @@ const Home = () => {
 
   //予約すみデータを取得する
   const getBooks = async () => {
-    const response = await fetch(`http://localhost:3000/api/book`, { method: "GET" });
+    const response = await fetch(`http://localhost:3000/api/book`,
+      {
+        method: "GET",
+        headers: {
+          'Authorization': 'Bearer ' + token,
+        },
+      });
     const data = await response.json();
 
     return data;
@@ -48,19 +63,24 @@ const Home = () => {
 
   //予約追加
   const addBook = async (params) => {
-    const token = session.user.token;
     await fetch(`http://localhost:3000/api/book`, {
       method: "POST",
-      // headers: {
-      //   'Authorization': 'Bearer ' + token,
-      // },
+      headers: {
+        'Authorization': 'Bearer ' + token,
+      },
       body: JSON.stringify(params)
     });
   }
 
   //予約変更
   const editBook = async (params) => {
-    return fetch(`http://localhost:3000/api/book`, { method: "PUT", body: JSON.stringify(params) });
+    return fetch(`http://localhost:3000/api/book`, {
+      method: "PUT",
+      headers: {
+        'Authorization': 'Bearer ' + token,
+      },
+      body: JSON.stringify(params)
+    });
   }
 
   //予約削除
@@ -69,12 +89,12 @@ const Home = () => {
   //passing id from url params to solve the problem.
   //or using dynamic path api
   const deleteBook = async (params) => {
-    const token = session.user.token;
+    const token = user.token;
     await fetch(`http://localhost:3000/api/book?id=${params.id}`, {
       method: "DELETE",
-      // headers: {
-      //   'Authorization': 'Bearer ' + token,
-      // },
+      headers: {
+        'Authorization': 'Bearer ' + token,
+      },
       body: JSON.stringify(params)
     });
   }

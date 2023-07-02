@@ -6,6 +6,8 @@ import { useFormik } from 'formik';
 import { useSession } from "next-auth/react";
 import { useMemo } from 'react';
 import * as yup from 'yup';
+import { useAuthContext } from '../../components/provider/auth';
+import { useState } from 'react';
 
 const validationSchema = yup.object({
     name: yup
@@ -15,7 +17,8 @@ const validationSchema = yup.object({
 });
 
 const Profile = () => {
-    const { data: session, update } = useSession();
+    // const { data: session, update } = useSession();
+    const { user, token, setToken } = useAuthContext()
 
     const [sbState, setSbState] = useState({
         sbOpen: false,
@@ -26,21 +29,31 @@ const Profile = () => {
 
     //プロファイルを変更
     const editProfile = (params) => {
-        return fetch(`http://localhost:3000/api/user`, { method: "PUT", body: JSON.stringify(params) });
+        return fetch(`http://localhost:3000/api/user`,
+            {
+                method: "PUT",
+                headers: {
+                    'Authorization': 'Bearer ' + token,
+                },
+                body: JSON.stringify(params)
+            });
     }
     const editMutation = useMutation(editProfile);
 
     const formik = useFormik({
         initialValues: {
-            email: session?.user?.email ?? '',
-            name: session?.user?.name ?? '',
+            email: user?.email ?? '',
+            name: user?.name ?? '',
         },
         validationSchema: validationSchema,
         onSubmit: async (values) => {
-            await editMutation.mutateAsync({ id: session?.user?.id, name: values.name }, {
-                onSuccess: (res) => {
+            await editMutation.mutateAsync({ id: user?.id, name: values.name }, {
+                onSuccess: async (res) => {
+                    console.log(res)
                     if (res.ok) {
-                        update({ name: values.name })
+                        // update({ name: values.name })
+                        const token = await res.text()
+                        setToken(token)
                         setSbState({ ...sbState, sbSeverity: 'success', sbOpen: true, sbMessage: '完了しました' })
                     }
                     else {
@@ -55,12 +68,12 @@ const Profile = () => {
     });
 
     useMemo(() => {
-        if (!session)
+        if (!user)
             return
 
-        formik.setFieldValue("email", session.user.email)
-        formik.setFieldValue("name", session.user.name)
-    }, [session])
+        formik.setFieldValue("email", user.email)
+        formik.setFieldValue("name", user.name)
+    }, [user])
 
     return (
         <Box display='flex' justifyContent='center'>

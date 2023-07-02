@@ -2,10 +2,11 @@
 
 import { Alert, Box, Button, Snackbar, Stack, TextField } from '@mui/material';
 import { useFormik } from 'formik';
-import { signIn } from "next-auth/react";
+
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import * as yup from 'yup';
+import { useAuthContext } from '../../components/provider/auth';
 
 const validationSchema = yup.object({
     email: yup
@@ -18,6 +19,7 @@ const validationSchema = yup.object({
 
 const Login = () => {
     const router = useRouter();
+    const { setToken } = useAuthContext()
 
     const [sbState, setSbState] = useState({
         sbOpen: false,
@@ -33,18 +35,20 @@ const Login = () => {
         },
         validationSchema: validationSchema,
         onSubmit: async (values) => {
-            await signIn("credentials", {
-                email: values.email,
-                password: values.password,
-                redirect: false
-            }).then(res => {
-                console.log(res)
-                if (res.ok && !res.error)
-                    router.push('/')
-                else {
-                    setSbState({ sbOpen: true, sbSeverity: 'error', sbMessage: '入力されたメールアドレスまたはパスワードに誤りがあります。' })
-                }
+            const res = await fetch("http://localhost:3000/api/auth", {
+                method: "POST",
+                body: JSON.stringify({ email: values.email, password: values.password })
             })
+
+            console.log(res)
+            if (res.ok) {
+                const token = await res.text()
+                setToken(token)
+                router.push('/')
+            }
+            else {
+                setSbState({ sbOpen: true, sbSeverity: 'error', sbMessage: '入力されたメールアドレスまたはパスワードに誤りがあります。' })
+            }
         },
     });
 

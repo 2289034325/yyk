@@ -109,11 +109,6 @@ const Home = () => {
     //enabled: false // disable this query from automatically running
   });
 
-  useEffect(() => {
-    refechBooks()
-    refechBookable()
-  }, [])
-
   const dboToEntity = (dbo) => {
     return {
       id: dbo.id,
@@ -168,6 +163,12 @@ const Home = () => {
   const editMutation = useMutation(editBook);
   const deleteMutation = useMutation(deleteBook);
 
+
+  useEffect(() => {
+    refechBooks()
+    refechBookable()
+  }, [refechBooks, refechBookable])
+  
   //予約確認ボタン処理
   const onConfirm = async (event, action) => {
     if (!event.event_id)

@@ -78,7 +78,7 @@ const BookSetting = ({ isOpen, handleClose }) => {
 
     useEffect(() => {
         refechBookable()
-    }, [])
+    }, [refechBookable])
 
     const setMutation = useMutation(setDefaultBookable);
 

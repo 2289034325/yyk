@@ -67,13 +67,13 @@ const Profile = () => {
         },
     });
 
-    useMemo(() => {
-        if (!user)
-            return
+    // useMemo(() => {
+    //     if (!user)
+    //         return
 
-        formik.setFieldValue("email", user.email)
-        formik.setFieldValue("name", user.name)
-    }, [user])
+    //     formik.setFieldValue("email", user.email)
+    //     formik.setFieldValue("name", user.name)
+    // }, [user])
 
     return (
         <Box display='flex' justifyContent='center'>

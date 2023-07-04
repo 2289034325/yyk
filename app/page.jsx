@@ -4,7 +4,7 @@ import dayGridPlugin from '@fullcalendar/daygrid'; // a plugin!
 import interactionPlugin from "@fullcalendar/interaction"; // needed for dayClick
 import FullCalendar from '@fullcalendar/react'; // must go before plugins
 import timeGridPlugin from '@fullcalendar/timegrid';
-import { Alert, Snackbar } from '@mui/material';
+import { Alert, Snackbar, Avatar, Box, Typography } from '@mui/material';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import dayjs from 'dayjs';
 import { useSession } from "next-auth/react";
@@ -13,6 +13,7 @@ import { v4 as uuid } from 'uuid';
 import Appointment from '../components/appointment';
 import { BOOKS, DEFAULT_BOOKABLE } from '../services/cache';
 import { useAuthContext } from '../components/provider/auth';
+
 
 const Home = () => {
   // const { data: session } = useSession();
@@ -168,7 +169,7 @@ const Home = () => {
     refechBooks()
     refechBookable()
   }, [refechBooks, refechBookable])
-  
+
   //予約確認ボタン処理
   const onConfirm = async (event, action) => {
     if (!event.event_id)
@@ -321,6 +322,30 @@ const Home = () => {
     //   return "bg-gray-300"
   }
 
+  const renderEventContent = (eventInfo) => {
+    console.log(eventInfo)
+
+    //月ビュー
+    if (eventInfo.view.type == "dayGridMonth") {
+      return (
+        <Box className='flex flex-row h-full w-full items-center bg-blue-500'>
+          <Avatar className='w-[16px] h-[16px] text-xs'>{user?.name?.substring(0, 1)}</Avatar>
+          <Typography className='flex-1 text-sm text-ellipsis whitespace-nowrap overflow-hidden text-white' >{eventInfo.event.title}</Typography>
+        </Box>
+      )
+    }
+
+    //週ビュー
+    return (
+      <Box className='flex flex-row h-full w-full items-center ml-[-1px] mt-[-1px]'>
+        <Avatar sx={{ width: 32, height: 32 }}>{user?.name?.substring(0, 1)}</Avatar>
+        <Typography className='flex-1 text-ellipsis whitespace-nowrap overflow-hidden' >{eventInfo.event.title}</Typography>
+      </Box>)
+
+
+
+  }
+
   return (
     <>
       <FullCalendar
@@ -331,6 +356,7 @@ const Home = () => {
           center: 'title',
           right: 'dayGridMonth,timeGridWeek'
         }}
+        eventContent={renderEventContent}
         editable={true}
         //not fired if drop to same place as drag from
         eventDrop={eventDrop}

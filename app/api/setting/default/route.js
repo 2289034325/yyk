@@ -1,5 +1,6 @@
 import { getToken } from "next-auth/jwt";
 import { getDefaultBookable, setDefaultBookable } from '../../../../database/db';
+import { headers } from "next/headers";
 
 export const GET = async (request) => {
     try {
@@ -20,7 +21,7 @@ export const PUT = async (request) => {
             return new Response("システムエラー", { status: 401 })
 
         if (user.role != 'admin')
-            return new Response('権限なし', { status: 500 })
+            return new Response('権限なし', { status: 401 })
 
 
         const settings = await request.json()

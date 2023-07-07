@@ -1,5 +1,5 @@
 import EastIcon from '@mui/icons-material/East';
-import { Alert, Box, Button, Snackbar, Stack, TextField } from '@mui/material';
+import { Alert, Box, Button, Portal, Snackbar, Stack, TextField } from '@mui/material';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
@@ -80,10 +80,10 @@ const Appointment = ({ isOpen, option, apt, handleClose, handleFinish }) => {
                     console.log(res)
                     //この書き方はuseQueryを動かして、RerenderもFired
                     // queryClient.setQueryData([BOOKS], (oldData) => ([...oldData, data]))
-                    if (res.ok && !res.error)
+                    if (res.ok)
                         success = true
                     else
-                        setSbState({ ...sbState, sbSeverity: 'error', sbOpen: true, sbMessage: res.error })
+                        setSbState({ ...sbState, sbSeverity: 'error', sbOpen: true, sbMessage: res.text() })
                 }
             })
         }
@@ -92,10 +92,10 @@ const Appointment = ({ isOpen, option, apt, handleClose, handleFinish }) => {
                 onSuccess: (res) => {
                     //この書き方はuseQueryを動かして、RerenderもFired
                     // queryClient.setQueryData([BOOKS], (oldData) => ([...oldData, data]))
-                    if (res.ok && !res.error)
+                    if (res.ok)
                         success = true
                     else
-                        setSbState({ ...sbState, sbSeverity: 'error', sbOpen: true, sbMessage: res.error })
+                        setSbState({ ...sbState, sbSeverity: 'error', sbOpen: true, sbMessage: res.text() })
                 }
             })
         }
@@ -170,17 +170,19 @@ const Appointment = ({ isOpen, option, apt, handleClose, handleFinish }) => {
                 </DialogActions>
             </Dialog>
 
-            <Snackbar
-                anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-                open={sbOpen}
-                onClose={() => { setSbState({ ...sbState, sbOpen: false }) }}
-                message={sbMessage}
-                autoHideDuration={2000}
-            >
-                <Alert severity={sbSeverity} sx={{ width: '100%' }}>
-                    {sbMessage}
-                </Alert>
-            </Snackbar>
+            <Portal>
+                <Snackbar
+                    anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+                    open={sbOpen}
+                    onClose={() => { setSbState({ ...sbState, sbOpen: false }) }}
+                    message={sbMessage}
+                    autoHideDuration={2000}
+                >
+                    <Alert severity={sbSeverity} sx={{ width: '100%' }}>
+                        {sbMessage}
+                    </Alert>
+                </Snackbar>
+            </Portal >
         </>
 
     )

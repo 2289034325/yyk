@@ -1,11 +1,11 @@
 import { getToken } from "next-auth/jwt";
-import { addBook, deleteBook, editBook, getBook, getBooked } from '../../../database/db';
+import { addBook, deleteBook, editBook, getBook, getBooked,getBookedCrossTime } from '../../../database/db';
 import jwt from "jsonwebtoken";
 import { headers } from "next/headers";
 
 export const GET = async (request) => {
     try {
-        const books = getBooked(Date.now(), Date.now())
+        const books = getBooked()
 
         return new Response(JSON.stringify(books), { status: 200 })
     } catch (error) {
@@ -23,6 +23,12 @@ export const POST = async (request) => {
             return new Response("システムエラー", { status: 401 })
 
         const { id, title, start, end } = await request.json()
+        //予約可能かどうかのチェック
+        const books = getBookedCrossTime(start, end)
+        if (books.length > 0)
+            return new Response("予約不可", { status: 500 })
+
+        //予約追加
         addBook(user.id, id, title, start, end)
 
         return new Response()
@@ -42,9 +48,19 @@ export const PUT = async (request) => {
 
         const { id, title, start, end } = await request.json()
         const book = getBook(id)
+
+        console.log(book?.userId, user?.id)
+
         if (book?.userId != user?.id)
             return new Response("システムエラー", { status: 500 })
 
+        //予約可能かどうかのチェック
+        const books = getBookedCrossTime(start, end, id)
+        console.log(books)
+        if (books.length > 0)
+            return new Response("予約変更不可", { status: 500 })
+
+        //予約変更
         editBook(id, title, start, end)
 
         return new Response()

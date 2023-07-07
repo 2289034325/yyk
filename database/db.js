@@ -53,7 +53,30 @@ export function getSpecialBookable(start) {
 
 //指定期間の予約を取得
 export function getBooked(start, end) {
-    return db.booked;
+    let nbs = db.booked.map(b => ({
+        ...b,
+        userName: db.users.find(u => u.id == b.userId)?.name
+    }));
+
+    if (start)
+        nbs = nbs.filter(b => b.start >= start);
+    if (end)
+        nbs = nbs.filter(b => b.end <= end);
+
+    return nbs;
+}
+
+//指定時間帯と重なる予約を取得
+export function getBookedCrossTime(start, end, expId) {
+    //終了時間は指定時間帯に含む予約を取得
+    const nbs = db.booked.filter(b => b.end > start && b.end <= end && b.id != expId);
+
+    //開始時間は指定時間帯に含む予約を取得
+    const nbs2 = db.booked.filter(b => b.start >= start && b.start < end && b.id != expId);
+
+    console.log(start, end, nbs, nbs2)
+
+    return [...nbs, ...nbs2];
 }
 
 //生徒予約追加

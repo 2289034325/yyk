@@ -1,6 +1,7 @@
 import { getToken } from "next-auth/jwt";
 import { getDefaultBookable, setDefaultBookable } from '../../../../database/db';
 import { headers } from "next/headers";
+import jwt from "jsonwebtoken";
 
 export const GET = async (request) => {
     try {

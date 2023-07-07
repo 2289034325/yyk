@@ -24,6 +24,8 @@ const Home = () => {
   const [aptOption, setAptOption] = useState('')
   const [editingApt, setEditingApt] = useState({})
 
+  const [calenderView, setCalenderView] = useState('timeGridWeek');
+
   //操作結果メッセージ
   const [sbState, setSbState] = useState({
     sbOpen: false,
@@ -90,7 +92,7 @@ const Home = () => {
   //passing id from url params to solve the problem.
   //or using dynamic path api
   const deleteBook = async (params) => {
-    const token = user.token;
+    const token = user?.token;
     await fetch(`http://localhost:3000/api/book?id=${params.id}`, {
       method: "DELETE",
       headers: {
@@ -111,11 +113,27 @@ const Home = () => {
   });
 
   const dboToEntity = (dbo) => {
+    //自分の予約は普通のEventとして表示
+    if (dbo.userId == user?.id)
+      return {
+        id: dbo.id,
+        title: dbo.title,
+        start: dbo.start,
+        end: dbo.end,
+        userId: dbo.userId,
+        userName: dbo.userName
+      }
+
+    //他人の予約はBackground Eventとして表示
     return {
       id: dbo.id,
       title: dbo.title,
       start: dbo.start,
-      end: dbo.end
+      end: dbo.end,
+      userId: dbo.userId,
+      userName: dbo.userName,
+      display: 'background',
+      backgroundColor: '#6b6a6a'
     }
   }
 
@@ -132,7 +150,14 @@ const Home = () => {
     if (!books)
       return []
 
-    return books.map(b => dboToEntity(b))
+    const bs = books.map(b => dboToEntity(b))
+
+    //月ビューかつユーザは管理員以外の場合、他人の予約は非表示    
+    if (calendarRef.current?.getApi().view.type == "dayGridMonth" && user?.role != 'admin') {
+      return bs.filter(b => b.userId == user?.id)
+    }
+
+    return bs
   }, [books])
 
   const { data: bookables, refetch: refechBookable } = useQuery([DEFAULT_BOOKABLE], getDefaultBookable, {
@@ -146,6 +171,7 @@ const Home = () => {
     if (!bookables)
       return []
 
+    //予約できる時間帯を取得
     const hs = bookables.map(b => b.spans.map(s => (
       {
         daysOfWeek: [b.day],
@@ -227,6 +253,11 @@ const Home = () => {
   const eventClick = (e) => {
     const evt = { id: e.event.id, title: e.event.title, start: e.event.start, end: e.event.end }
     console.log(evt)
+
+    //自分の予約のみ変更可能
+    if (e.event.extendedProps.userId != user?.id)
+      return
+
     setEditingApt(evt)
     setAptOption('EDIT')
     setShowAptDlg(true)
@@ -263,6 +294,8 @@ const Home = () => {
       e.revert()
   }
 
+  //指定時間帯が予約可能かどうか
+  //ACTODO: call api to check
   const isBookable = (datetime) => {
     if (!bookables)
       return false
@@ -270,21 +303,21 @@ const Home = () => {
     const day = datetime.getDay()
     const cellTimeStart = dayjs(dayjs(datetime).format("HH:mm"), "HH:mm")
 
+    //デフォールト値が設定されていない場合、予約不可
     const spans = bookables.find(r => r.day == day)?.spans
     if (!spans)
       return false
 
-    spans.forEach(s => {
-      // console.log(dayjs(s.start, "HH:mm"))
-      // console.log(cellTimeStart.isSame(dayjs(s.start, "HH:mm")))
-    })
-
-    if (spans.find(s =>
+    if (!spans.find(s =>
       (cellTimeStart.isAfter(dayjs(s.start, "HH:mm")) || cellTimeStart.isSame(dayjs(s.start, "HH:mm"))) &&
       (cellTimeStart.isBefore(dayjs(s.end, "HH:mm")) || cellTimeStart.isSame(dayjs(s.end, "HH:mm")))))
-      return true
+      return false
 
-    return false
+    //予約済みの場合、予約不可
+    if (bookData.find(b => dayjs(b.start).isSame(datetime)))
+      return false
+
+    return true
   }
 
   const AppointOptFinished = () => {
@@ -329,26 +362,28 @@ const Home = () => {
     if (eventInfo.view.type == "dayGridMonth") {
       return (
         <Box className='flex flex-row h-full w-full items-center bg-blue-500'>
-          <Avatar className='w-[16px] h-[16px] text-xs'>{user?.name?.substring(0, 1)}</Avatar>
+          <Avatar className='w-[16px] h-[16px] mx-1 text-xs'>{eventInfo.event.extendedProps.userName?.substring(0, 1)}</Avatar>
           <Typography className='flex-1 text-sm text-ellipsis whitespace-nowrap overflow-hidden text-white' >{eventInfo.event.title}</Typography>
         </Box>
       )
     }
 
     //週ビュー
+    //他のユーザの予約はBackground Eventとして表示
+    if (eventInfo.event.extendedProps.userId != user?.id)
+      return (<></>)
+
     return (
       <Box className='flex flex-row h-full w-full items-center ml-[-1px] mt-[-1px]'>
-        <Avatar sx={{ width: 32, height: 32 }}>{user?.name?.substring(0, 1)}</Avatar>
+        <Avatar className='w-[32px] h-[32px] mx-1'>{eventInfo.event.extendedProps.userName?.substring(0, 1)}</Avatar>
         <Typography className='flex-1 text-ellipsis whitespace-nowrap overflow-hidden' >{eventInfo.event.title}</Typography>
       </Box>)
-
-
-
   }
 
   return (
     <>
       <FullCalendar
+        ref={calendarRef}
         height='100%'
         initialView="timeGridWeek"
         headerToolbar={{
@@ -358,6 +393,7 @@ const Home = () => {
         }}
         eventContent={renderEventContent}
         editable={true}
+        slotLabelClassNames={() => { return ['text-gray-400'] }}
         //not fired if drop to same place as drag from
         eventDrop={eventDrop}
         //always fire wherever it drops

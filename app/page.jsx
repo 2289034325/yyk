@@ -8,7 +8,7 @@ import { Alert, Snackbar, Avatar, Box, Typography } from '@mui/material';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import dayjs from 'dayjs';
 import { useSession } from "next-auth/react";
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { use, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { v4 as uuid } from 'uuid';
 import Appointment from '../components/appointment';
 import { BOOKS, DEFAULT_BOOKABLE } from '../services/cache';
@@ -103,7 +103,7 @@ const Home = () => {
   }
 
 
-  const queryClient = useQueryClient()
+  // const queryClient = useQueryClient()
   const calendarRef = useRef(null);
 
   // データ操作
@@ -158,7 +158,7 @@ const Home = () => {
     }
 
     return bs
-  }, [books])
+  }, [books, user])
 
   const { data: bookables, refetch: refechBookable } = useQuery([DEFAULT_BOOKABLE], getDefaultBookable, {
     refetchOnWindowFocus: false,
@@ -230,8 +230,36 @@ const Home = () => {
     }
   }
 
+
+  //指定時間帯が予約可能かどうか
+  const isBookable = useCallback((datetime) => {
+    if (!bookables)
+      return false
+
+    const day = datetime.getDay()
+    const cellTimeStart = dayjs(dayjs(datetime).format("HH:mm"), "HH:mm")
+
+    //デフォールト値が設定されていない場合、予約不可
+    const spans = bookables.find(r => r.day == day)?.spans
+    if (!spans)
+      return false
+
+    if (!spans.find(s =>
+      (cellTimeStart.isAfter(dayjs(s.start, "HH:mm")) || cellTimeStart.isSame(dayjs(s.start, "HH:mm"))) &&
+      (cellTimeStart.isBefore(dayjs(s.end, "HH:mm")) || cellTimeStart.isSame(dayjs(s.end, "HH:mm")))))
+      return false
+
+    //予約済みの場合、予約不可
+    if (bookData.find(b =>
+      (dayjs(datetime).isAfter(dayjs(b.start)) || dayjs(datetime).isSame(dayjs(b.start))) &&
+      (dayjs(datetime).isBefore(dayjs(b.end)))))
+      return false
+
+    return true
+  }, [bookables, bookData])
+
   //予約新規
-  const cellClick = (e) => {
+  const cellClick = useCallback((e) => {
     console.log(e)
     // e.jsEvent.detail == 2
     // console.log(e)
@@ -247,10 +275,10 @@ const Home = () => {
     setEditingApt({ id: uuid(), title: '', start: e.date, end: dayjs(e.date).add(1, 'hour') })
     setAptOption('ADD')
     setShowAptDlg(true)
-  }
+  }, [isBookable])
 
   //予約変更
-  const eventClick = (e) => {
+  const eventClick = useCallback((e) => {
     const evt = { id: e.event.id, title: e.event.title, start: e.event.start, end: e.event.end }
     console.log(evt)
 
@@ -261,10 +289,10 @@ const Home = () => {
     setEditingApt(evt)
     setAptOption('EDIT')
     setShowAptDlg(true)
-  }
+  }, [user])
 
   //予約移動
-  const eventDrop = async (e) => {
+  const eventDrop = useCallback(async (e) => {
     //新しい時間に移動可能チェック
     const toDay = e.event.start.getDay()
     const toStart = dayjs(dayjs(e.event.start).format("HH:mm"), "HH:mm")
@@ -286,39 +314,14 @@ const Home = () => {
         if (res.ok)
           success = true;
         else
-          setSbState({ ...sbState, sbSeverity: 'error', sbOpen: true, sbMessage: res.text() })
+          setSbState({ sbSeverity: 'error', sbOpen: true, sbMessage: res.text() })
       }
     })
 
     if (!success)
       e.revert()
-  }
+  }, [bookables])
 
-  //指定時間帯が予約可能かどうか
-  //ACTODO: call api to check
-  const isBookable = (datetime) => {
-    if (!bookables)
-      return false
-
-    const day = datetime.getDay()
-    const cellTimeStart = dayjs(dayjs(datetime).format("HH:mm"), "HH:mm")
-
-    //デフォールト値が設定されていない場合、予約不可
-    const spans = bookables.find(r => r.day == day)?.spans
-    if (!spans)
-      return false
-
-    if (!spans.find(s =>
-      (cellTimeStart.isAfter(dayjs(s.start, "HH:mm")) || cellTimeStart.isSame(dayjs(s.start, "HH:mm"))) &&
-      (cellTimeStart.isBefore(dayjs(s.end, "HH:mm")) || cellTimeStart.isSame(dayjs(s.end, "HH:mm")))))
-      return false
-
-    //予約済みの場合、予約不可
-    if (bookData.find(b => dayjs(b.start).isSame(datetime)))
-      return false
-
-    return true
-  }
 
   const AppointOptFinished = () => {
 
@@ -355,7 +358,7 @@ const Home = () => {
     //   return "bg-gray-300"
   }
 
-  const renderEventContent = (eventInfo) => {
+  const renderEventContent = useCallback((eventInfo) => {
     console.log(eventInfo)
 
     //月ビュー
@@ -378,7 +381,21 @@ const Home = () => {
         <Avatar className='w-[32px] h-[32px] mx-1'>{eventInfo.event.extendedProps.userName?.substring(0, 1)}</Avatar>
         <Typography className='flex-1 text-ellipsis whitespace-nowrap overflow-hidden' >{eventInfo.event.title}</Typography>
       </Box>)
-  }
+  }, [user])
+
+  const slotLabelClassNamesHook = useCallback(() => { return ['text-gray-400'] }, [])
+
+  const headerToolbar = useRef({
+    left: 'today prev,next',
+    center: 'title',
+    right: 'dayGridMonth,timeGridWeek'
+  })
+
+  const closeBookEditor = useCallback(() => setShowAptDlg(false), [])
+
+  const closeSnackbar = useCallback(() => setSbState({ ...sbState, sbOpen: false }), [sbState])
+
+  const calenderPlugins = useRef([dayGridPlugin, timeGridPlugin, interactionPlugin])
 
   return (
     <>
@@ -386,20 +403,16 @@ const Home = () => {
         ref={calendarRef}
         height='100%'
         initialView="timeGridWeek"
-        headerToolbar={{
-          left: 'today prev,next',
-          center: 'title',
-          right: 'dayGridMonth,timeGridWeek'
-        }}
+        headerToolbar={headerToolbar.current}
         eventContent={renderEventContent}
         editable={true}
-        slotLabelClassNames={() => { return ['text-gray-400'] }}
+        slotLabelClassNames={slotLabelClassNamesHook}
         //not fired if drop to same place as drag from
         eventDrop={eventDrop}
         //always fire wherever it drops
-        eventDragStop={() => { }}
+        // eventDragStop={() => { }}
         eventDurationEditable={false}
-        plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+        plugins={calenderPlugins.current}
         events={bookData}
         // slotLaneClassNames={getTimeCellClassName}
         dateClick={cellClick}
@@ -412,17 +425,17 @@ const Home = () => {
           isOpen={showAptDlg}
           apt={editingApt}
           option={aptOption}
-          handleClose={() => setShowAptDlg(false)}
+          handleClose={closeBookEditor}
           handleFinish={AppointOptFinished} />}
 
       <Snackbar
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
         open={sbOpen}
-        onClose={() => { setSbState({ ...sbState, sbOpen: false }) }}
+        onClose={closeSnackbar}
         message={sbMessage}
         autoHideDuration={2000}
       >
-        <Alert severity={sbSeverity} sx={{ width: '100%' }}>
+        <Alert severity={sbSeverity} className='w-full'>
           {sbMessage}
         </Alert>
       </Snackbar>

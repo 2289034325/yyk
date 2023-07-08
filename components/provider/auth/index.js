@@ -3,6 +3,8 @@
 import jwtDecode from "jwt-decode";
 import { useCallback, useMemo, useRef, useState, useSyncExternalStore, useContext } from "react";
 import { createContext } from "react";
+import dayjs from 'dayjs';
+import { cookies } from 'next/headers'; // Import cookies
 
 // const authStore = () => {
 //   const token = window != undefined ? localStorage.getItem('token') : null;
@@ -53,7 +55,14 @@ const useAuthContext = () => {
 }
 
 const AuthProvider = ({ children }) => {
-  const token = typeof window === "undefined" ? null : localStorage.getItem('token');
+  // here, cause warning: Hydration failed because the initial UI does not match what was rendered on the server.
+  // so it's better to save token in cookie
+  // when user request, server will get token from cookie
+  // const token = typeof window === "undefined" ? "" : localStorage.getItem('token');
+
+  // get token from cookie  
+  const token = typeof window === "undefined" ? cookies().get('token') : (document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1] ?? '')
+
   // const [token, setToken] = useState(lt)
   const user = token ? jwtDecode(token) : null
 
@@ -67,7 +76,9 @@ const AuthProvider = ({ children }) => {
 
   const get = () => { return store.current }
   const set = (token) => {
-    localStorage.setItem('token', token)
+    //token を cookie に保存する
+    document.cookie = `token=${token}; expires=${dayjs(new Date()).add(1, 'M').toDate()}; path=/`;
+    // localStorage.setItem('token', token)
     // setToken(token)
     const user = token ? jwtDecode(token) : null
     store.current = { user, token }

@@ -114,7 +114,7 @@ const Home = () => {
 
   const dboToEntity = (dbo) => {
     //自分の予約は普通のEventとして表示
-    if (dbo.userId == user?.id)
+    if (dbo.userId == user?.id || user?.role == 'admin')
       return {
         id: dbo.id,
         title: dbo.title,
@@ -373,7 +373,7 @@ const Home = () => {
 
     //週ビュー
     //他のユーザの予約はBackground Eventとして表示
-    if (eventInfo.event.extendedProps.userId != user?.id)
+    if (eventInfo.event.extendedProps.userId != user?.id && user?.role != 'admin')
       return (<></>)
 
     return (
